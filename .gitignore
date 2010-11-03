@@ -1,0 +1,11 @@
+.Rhistory
+.DS_Store
+*.log
+*.tmproj
+*.old
+*.err
+*.out
+*.html
+*.pdf
+__init__.py
+aws_config/
