@@ -24,6 +24,7 @@ The author may be contacted at ngcrawford@gmail.com
 
 import os
 import sys 
+import glob
 from subprocess import *
 
 def oneliners2phylip(line):
@@ -38,32 +39,14 @@ def oneliners2phylip(line):
     return alignment
 
 def fasttree(args):
-    """sends the individual 
-    
-    cat practice_alignments/1.phylip | ./FastTree -nt -quiet
-    
+    """sends the individual
+    cat practice_alignments/3.align.oneliners.txt | ./seqcap.py fasttree
     """
     for line in sys.stdin:
-        
-        
         ft = Popen(['./FastTree','-nt','-quiet'],stdin=PIPE,stderr=PIPE,stdout=PIPE)
         ft.stdin.write(oneliners2phylip(line))
         alnstr = ft.communicate()[0]
-        print ','.join(alnstr.strip().replace('>','').split('\n'))
-        
-    
-    # for line in sys.stdin:
-    #     path = line.strip()
-    #     # pathname = os.path.dirname(sys.argv[0])
-    #     # pathname = os.path.abspath(pathname)
-    #     # print pathname
-    #     # this will probably need to be changed for aws
-    #     command = './PhyML -nt -quiet %s' % (path)
-    #     command = shlex.split(command)
-    #     print subprocess.Popen(command, stderr=subprocess.STDOUT, \
-    #                     stdout=subprocess.PIPE).communicate()# [0]
-        
-
+        print alnstr.strip()
         
 def muscle(args):
     
@@ -93,58 +76,59 @@ def aligns2oneliners(args):
     taxa_id_dict = {}
     taxa_seq_dict = {}
     
-    for count, line in enumerate(sys.stdin):    
+    filenames = glob.glob(os.path.join('practice_alignments/',"*.phylip"))
+    for fin in filenames:
+        for count, line in enumerate(open(fin,'r')):    
         
-        # Process taxa count and alignment length line
-        if count == 0:
-            taxa_count, align_len = line.strip().split(' ')
-            taxa_count = int(taxa_count.strip()) 
-            align_len = int(align_len.strip())
+            # Process taxa count and alignment length line
+            if count == 0:
+                taxa_count, align_len = line.strip().split(' ')
+                taxa_count = int(taxa_count.strip()) 
+                align_len = int(align_len.strip())
         
-        count = count -1    # update count to skip header
+            count = count -1    # update count to skip header
         
-        if len(line.strip()) == 0: continue # skip blank lines
+            if len(line.strip()) == 0: 
+                continue # skip blank lines
         
-        # Do initial dictionary data population
-        if 0 <= count <= taxa_count:
-            taxa_name = line[:11].strip()
-            sequence = line[10:].strip()
-            taxa_id_dict[count] = taxa_name
-            taxa_seq_dict[taxa_name] = sequence.replace(' ','')
+            # Do initial dictionary data population
+            if 0 <= count <= taxa_count:
+                taxa_name = line[:11].strip()
+                sequence = line[10:].strip()
+                taxa_id_dict[count] = taxa_name
+                taxa_seq_dict[taxa_name] = sequence.replace(' ','')
         
-        # Add extra seqeunces to taxa/seq dictionary
-        if count > taxa_count:
-            dict_id = count % tcount_plus_extra
-            taxa_name = taxa_id_dict[dict_id]
-            taxa_seq_dict[taxa_name] = taxa_seq_dict[taxa_name] + line.replace(' ','').strip()
+            # Add extra seqeunces to taxa/seq dictionary
+            if count > taxa_count:
+                dict_id = count % tcount_plus_extra
+                taxa_name = taxa_id_dict[dict_id]
+                taxa_seq_dict[taxa_name] = taxa_seq_dict[taxa_name] + line.replace(' ','').strip()
         
-        tcount_plus_extra = taxa_count + 1
+            tcount_plus_extra = taxa_count + 1
     
-    final_line = ""
-    for key, value in taxa_seq_dict.iteritems():
-        final_line += '%s,%s, ' % (key, value)
-    final_line = final_line[:-2]    # trim space and comma from end of sequence
-    final_line + "\n"
-    print final_line
+        final_line = ""
+        for key, value in taxa_seq_dict.iteritems():
+            final_line += '%s,%s, ' % (key, value)
+        
+        final_line = final_line[:-2]    # trim space and comma from end of sequence
+        final_line + "\n"
+        print final_line
+
+def mpest(args):
+    for line in sys.stdin:
+        print line
+        print 'awesome'
 
 def fastas2oneliners(args):
     pass
     
 def main():
-    """
-    Can be run as follows:
-    
-    
-    cat practice_alignments/1.phylip | ./seqcap.py convert-file | ./seqcap.py fasttree
-    
-    
-    
-    """
     
     if sys.argv[1] == "fasttree":
         fasttree(sys.argv[2:])
-    if sys.argv[1] == 'convert-file':
-        aligns2oneliners(sys.argv[2:])
+    
+    if sys.argv[1] == "mpest":
+        mpest(sys.argv[2:])
 
 if __name__ == '__main__':
     main()
