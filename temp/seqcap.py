@@ -22,24 +22,48 @@ along with this program.  If not, see <http://www.gnu.org/licenses
 The author may be contacted at ngcrawford@gmail.com
 """
 
-import os, sys, glob, shlex, subprocess
+import os
+import sys 
+from subprocess import *
+
+def oneliners2phylip(line):
+    seqs = line.split(',')
+    label_seqs = zip(seqs[:-1:2],seqs[1::2])
+    taxa_count = len(label_seqs)
+    seq_length = len(label_seqs[0][1])
+    alignment = "%s %s\n" % (taxa_count, seq_length) # add header
+    for taxa_name, seq in label_seqs:
+        taxa_name = taxa_name.strip()
+        alignment += '%-*s%s\n' % (10, taxa_name, seq)
+    return alignment
+
 def fasttree(args):
-    """sends the individual """
+    """sends the individual 
+    
+    cat practice_alignments/1.phylip | ./FastTree -nt -quiet
+    
+    """
     for line in sys.stdin:
-        path = line.strip()
-        # pathname = os.path.dirname(sys.argv[0])
-        # pathname = os.path.abspath(pathname)
-        # print pathname
-        # this will probably need to be changed for aws
-        command = './PhyML -nt -quiet %s' % (path)
-        command = shlex.split(command)
-        print subprocess.Popen(command, stderr=subprocess.STDOUT, \
-                        stdout=subprocess.PIPE).communicate()# [0]
+        
+        
+        ft = Popen(['./FastTree','-nt','-quiet'],stdin=PIPE,stderr=PIPE,stdout=PIPE)
+        ft.stdin.write(oneliners2phylip(line))
+        alnstr = ft.communicate()[0]
+        print ','.join(alnstr.strip().replace('>','').split('\n'))
+        
+    
+    # for line in sys.stdin:
+    #     path = line.strip()
+    #     # pathname = os.path.dirname(sys.argv[0])
+    #     # pathname = os.path.abspath(pathname)
+    #     # print pathname
+    #     # this will probably need to be changed for aws
+    #     command = './PhyML -nt -quiet %s' % (path)
+    #     command = shlex.split(command)
+    #     print subprocess.Popen(command, stderr=subprocess.STDOUT, \
+    #                     stdout=subprocess.PIPE).communicate()# [0]
         
 
-def phyml(args):
-    for line in sys.stdin:
-        path = line.strip()
         
 def muscle(args):
     
@@ -55,8 +79,6 @@ def muscle(args):
     # mh.stdin.write('\n'.join(['>%s\n%s' % (l,s) for l,s in label_seqs]))
     # aln_from_stdout,output_from_stderr = mh.communicate()
     
-    seqs = sys.argv[1].split(',')
-    label_seqs = zip(seqs[:-1:2],seqs[1::2])
     
     mh = Popen(['muscle','-stable'],stdin=PIPE,stderr=PIPE,stdout=PIPE)
     mh.stdin.write('\n'.join(['>%s\n%s' % (l,s) for l,s in label_seqs]))
@@ -64,7 +86,9 @@ def muscle(args):
     print ','.join(alnstr.strip().replace('>','').split('\n'))
 
 def aligns2oneliners(args):
-
+    """This code converts phylip alignments to a single tab-delimited line
+        of taxa ids and sequence pairs"""
+    
     # Storage Dictionaries
     taxa_id_dict = {}
     taxa_seq_dict = {}
@@ -88,7 +112,7 @@ def aligns2oneliners(args):
             taxa_id_dict[count] = taxa_name
             taxa_seq_dict[taxa_name] = sequence.replace(' ','')
         
-        # add extra seqeunces to taxa/seq dictionary
+        # Add extra seqeunces to taxa/seq dictionary
         if count > taxa_count:
             dict_id = count % tcount_plus_extra
             taxa_name = taxa_id_dict[dict_id]
@@ -98,15 +122,27 @@ def aligns2oneliners(args):
     
     final_line = ""
     for key, value in taxa_seq_dict.iteritems():
-        final_line += '%s, %s, ' % (key, value)
-    final_line = final_line[:-2]
+        final_line += '%s,%s, ' % (key, value)
+    final_line = final_line[:-2]    # trim space and comma from end of sequence
     final_line + "\n"
     print final_line
 
-                
+def fastas2oneliners(args):
+    pass
+    
 def main():
+    """
+    Can be run as follows:
+    
+    
+    cat practice_alignments/1.phylip | ./seqcap.py convert-file | ./seqcap.py fasttree
+    
+    
+    
+    """
+    
     if sys.argv[1] == "fasttree":
-        mapper(sys.argv[2:])
+        fasttree(sys.argv[2:])
     if sys.argv[1] == 'convert-file':
         aligns2oneliners(sys.argv[2:])
 
