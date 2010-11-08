@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import sys 
+sys.path.append('.') 
+from tree import Tree
+
+
 import os
 import sys 
+sys.path.append('.')
 import glob
 import shlex
 import tempfile
@@ -39,8 +45,8 @@ def phyml(args):
         temp_in.seek(0)     # move pointer to beginning of file
         
         # RUN PHYML
-        cli = '/Users/nick/Desktop/hadoop-0.21.0/./PhyML_3.0 --input {0}'.format(temp_in.name)
-        print cli
+        # /user/nick/
+        cli = './PhyML_3.0 --input {0}'.format(temp_in.name)
         cli_parts = shlex.split(cli)
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE)
         ft.communicate()[0]

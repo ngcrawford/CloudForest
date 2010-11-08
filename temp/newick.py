@@ -24,6 +24,9 @@ __VERSION__="ete2-2.0rev105"
 
 import re
 import os
+import sys 
+sys.path.append('.') 
+
 
 __all__ = ["read_newick", "write_newick", "print_supported_formats"]
 

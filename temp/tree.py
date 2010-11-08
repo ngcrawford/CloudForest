@@ -22,6 +22,8 @@ __VERSION__="ete2-2.0rev105"
 #
 # #END_LICENSE#############################################################
 
+import sys 
+sys.path.append('.') 
 import os
 import random
 

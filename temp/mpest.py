@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+
 import os
 import sys 
+sys.path.append('.')
 import glob
 import shlex
 import tempfile
@@ -36,7 +38,7 @@ def mpest(args):
     
     def execute_mpest():
         seed = random.randint(0,1000000)
-        cli = "./mpest-bf-v1 rooted.control %s mpest.species.tree" % (seed)
+        cli = "./mpestBFV1 rooted.control %s mpest.species.tree" % (seed)
         cli_parts = shlex.split(cli)
         mp = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE)
         mp.communicate()[0]
