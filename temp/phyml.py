@@ -34,7 +34,6 @@ def phyml(args):
         
         # SETUP TEMP FILE
         temp_in = tempfile.NamedTemporaryFile(suffix='.out', dir="/tmp/hadoop-%s/" % (user))
-        print temp_in.name
         for line in phylip:
             temp_in.write(line)
         temp_in.seek(0)     # move pointer to beginning of file
