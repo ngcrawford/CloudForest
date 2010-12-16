@@ -1,3 +1,0 @@
-/Users/nick/Desktop/Code/BioAWS/temp/practice_alignments/1.phylip
-/Users/nick/Desktop/Code/BioAWS/temp/practice_alignments/2.phylip
-/Users/nick/Desktop/Code/BioAWS/temp/practice_alignments/3.phylip
