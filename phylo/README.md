@@ -41,15 +41,11 @@ JAVA_HOME=/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0`
 
 9. Type `jps` in the terminal and if everything worked you should see something like:
 
-> 12543 DataNode
-
-> 12776 Jps
-
-> 12677 JobTracker
-
-> 12755 TaskTracker
-
-> 12619 SecondaryNameNode
+        > 12543 DataNode
+        > 12776 Jps
+        > 12677 JobTracker
+        > 12755 TaskTracker
+        > 12619 SecondaryNameNode
 
 Using Your Local Hadoop Node:
 -----------------------------
@@ -78,25 +74,28 @@ Using Your Local Hadoop Node:
         -mapper phyml.py \
         -reducer mpest.py \
         -verbose
-        
-3. Run the streaming command on AWS.
 
-
-    elastic-mapreduce --jobflow j-29619QYVXRT1A --stream --enable-debugging \
-    --cache-archive s3n://ngc-practice/exes/aws.32bit.exes.tar.gz#bin \
-    --input s3n://ngc-practice/data/3.align.oneliners.txt \
-    --output s3n://ngc-practice/output \
-    --mapper s3n://ngc-practice/exes/phyml.py \
-    --reducer s3n://ngc-practice/exes/mpest.py \
-       
-
-
-
-
-The trick is that you need to use 'cacheFile' on all the modules and binaries you want to 'call' from your mapper and reducer.  This ensures that they are accessible from the compute nodes.  The other trick is to include the following lines in your python code before the homemade module imports.
+The trick is that you need to create a tar.gz of all the modules and binaries you want to 'call' from your mapper and reducer.  This ensures that they are accessible from the compute nodes.  The `#bin` means they are extracted into a folder called `bin` on the compute node.  The other trick is to include the following lines in your python code before the homemade module imports.
 
         import sys 
-        sys.path.append('.')
+        sys.path.append('.')  # may not be necessary
+        sys.path.append('bin')
+        
+Using AWS:
+----------
+
+1. Create and account and an s3 bucket. Here I use `ngc-practice`.
+
+2. Upload the `aws.32bit.exes.tar.gz` archive and the mapper and reducer scripts (`phyml.py` and `mpest.py`, respectively).
+
+3. Run the streaming command on AWS.
+
+        elastic-mapreduce --create --stream --enable-debugging \
+        --cache-archive s3n://ngc-practice/exes/aws.32bit.exes.tar.gz#bin \
+        --input s3n://ngc-practice/data/3.align.oneliners.txt \
+        --output s3n://ngc-practice/output \
+        --mapper s3n://ngc-practice/exes/phyml.py \
+        --reducer s3n://ngc-practice/exes/mpest.py \
 
 Anyway, this works on my single node cluster. Brilliant! 
 
