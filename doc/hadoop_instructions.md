@@ -6,7 +6,7 @@ Basic Setup for OS X
 2. Open `conf/hadoop-env.sh` and change `# export JAVA_HOME=/usr/lib/j2sdk1.6-sun ` to `export 
 JAVA_HOME=/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0`
 
-3. Open `bin/hadoop` and change `JAVA=$JAVA_HOME/bin/java` to `JAVA=$JAVA_HOME/Commands/java`
+3. Open `bin/hadoop-config.sh` and change `JAVA=$JAVA_HOME/bin/java` to `JAVA=$JAVA_HOME/Commands/java`
 
 4. Open `conf/hdfs-site.xml` and add the following lines:
 
@@ -56,11 +56,15 @@ Using Your Local Hadoop Node:
 
 1. Copy the files to the hadoop filesystem.
 
+        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/mpest.py mpest.py
         $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/phyml.py phyml.py
         $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/tree.py tree.py
         $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/newick.py newick.py
-        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/PhyML_3.0 PhyML_3.0
+        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/PhyML3 PhyML_3.0
         $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/mpestBFV1 mpestBFV1
+        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/practice_alignments/3.align.oneliners.txt 3.align.oneliners.txt
+        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/executables.tar.gz
+        
 
 2. Run the streaming command.
 
@@ -68,15 +72,26 @@ Using Your Local Hadoop Node:
         -file /Users/nick/Desktop/Code/BioAWS/temp/practice_alignments/3.align.oneliners.txt \
         -file /Users/nick/Desktop/Code/BioAWS/temp/mpest.py \
         -file /Users/nick/Desktop/Code/BioAWS/temp/phyml.py \
-        -cacheFile hdfs://localhost:9000/user/nick/newick.py#newick.py \
-        -cacheFile hdfs://localhost:9000/user/nick/tree.py#tree.py \
-        -cacheFile hdfs://localhost:9000/user/nick/mpestBFV1#mpestBFV1 \
-        -cacheFile hdfs://localhost:9000/user/nick/PhyML_3.0#PhyML_3.0 \
+        -cacheArchive hdfs://localhost:9000/user/nick/executables.tar.gz#bin \
         -input 3.align.oneliners.txt \
         -output output/ \
         -mapper phyml.py \
         -reducer mpest.py \
         -verbose
+        
+3. Run the streaming command on AWS.
+
+
+    elastic-mapreduce --jobflow j-29619QYVXRT1A --stream --enable-debugging \
+    --cache-archive s3n://ngc-practice/exes/aws.32bit.exes.tar.gz#bin \
+    --input s3n://ngc-practice/data/3.align.oneliners.txt \
+    --output s3n://ngc-practice/output \
+    --mapper s3n://ngc-practice/exes/phyml.py \
+    --reducer s3n://ngc-practice/exes/mpest.py \
+       
+
+
+
 
 The trick is that you need to use 'cacheFile' on all the modules and binaries you want to 'call' from your mapper and reducer.  This ensures that they are accessible from the compute nodes.  The other trick is to include the following lines in your python code before the homemade module imports.
 
