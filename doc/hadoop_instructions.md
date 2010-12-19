@@ -56,42 +56,35 @@ Using Your Local Hadoop Node:
 
 1. Copy the files to the hadoop filesystem.
 
-        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/mpest.py mpest.py
-        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/phyml.py phyml.py
-        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/tree.py tree.py
-        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/newick.py newick.py
-        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/PhyML3 PhyML_3.0
-        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/mpestBFV1 mpestBFV1
-        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/practice_alignments/3.align.oneliners.txt 3.align.oneliners.txt
-        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/executables.tar.gz
+        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/phylo/mpest.py mpest.py
+        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/phylo/phyml.py phyml.py
+        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/phylo/practice_alignments/3.align.oneliners.txt 3.align.oneliners.txt
+        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/phylo/osx.phylo.tar.gz osx.phylo.tar.gz 
+        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/phylo/setup.cfg setup.cfg
         
-
+        
 2. Run the streaming command.
 
         $ ./bin/hadoop jar /Users/nick/Desktop/hadoop-0.21.0/mapred/contrib/streaming/hadoop-0.21.0-streaming.jar \
-        -file /Users/nick/Desktop/Code/BioAWS/temp/practice_alignments/3.align.oneliners.txt \
-        -file /Users/nick/Desktop/Code/BioAWS/temp/mpest.py \
-        -file /Users/nick/Desktop/Code/BioAWS/temp/phyml.py \
-        -cacheArchive hdfs://localhost:9000/user/nick/executables.tar.gz#bin \
+        -file /Users/nick/Desktop/Code/BioAWS/phylo/phyml.py \
+        -file /Users/nick/Desktop/Code/BioAWS/phylo/mpest.py \
+        -file /Users/nick/Desktop/Code/BioAWS/phylo/osx.phylo.tar.gz \
+        -cacheArchive osx.phylo.tar.gz#bin \
         -input 3.align.oneliners.txt \
         -output output/ \
         -mapper phyml.py \
         -reducer mpest.py \
         -verbose
         
-3. Run the streaming command on AWS.
+3. Run the streaming command on AWS. The order of the commands is important with the mapper and reducer called last.
 
-
-    elastic-mapreduce --jobflow j-29619QYVXRT1A --stream --enable-debugging \
-    --cache-archive s3n://ngc-practice/exes/aws.32bit.exes.tar.gz#bin \
+    elastic-mapreduce --create --stream --enable-debugging \
+    --cache-archive s3n://ngc-practice/exes/aws.phylo.tar.gz#bin \
     --input s3n://ngc-practice/data/3.align.oneliners.txt \
     --output s3n://ngc-practice/output \
     --mapper s3n://ngc-practice/exes/phyml.py \
     --reducer s3n://ngc-practice/exes/mpest.py \
        
-
-
-
 
 The trick is that you need to use 'cacheFile' on all the modules and binaries you want to 'call' from your mapper and reducer.  This ensures that they are accessible from the compute nodes.  The other trick is to include the following lines in your python code before the homemade module imports.
 

@@ -81,14 +81,18 @@ The trick is that you need to create a tar.gz of all the modules and binaries yo
         sys.path.append('.')  # may not be necessary
         sys.path.append('bin')
         
+Anyway, this works on my single node cluster. Brilliant! 
+        
 Using AWS:
 ----------
 
-1. Create and account and an s3 bucket. Here I use `ngc-practice`.
+1. Create an AWS account and an s3 bucket. Here I use `ngc-practice`.
 
 2. Upload the `aws.32bit.exes.tar.gz` archive and the mapper and reducer scripts (`phyml.py` and `mpest.py`, respectively).
 
-3. Run the streaming command on AWS.
+3. Setup the Ruby cli so you can access a mapreduce setup from the command line
+
+4. Run the streaming command on AWS.
 
         elastic-mapreduce --create --stream --enable-debugging \
         --cache-archive s3n://ngc-practice/exes/aws.32bit.exes.tar.gz#bin \
@@ -97,7 +101,7 @@ Using AWS:
         --mapper s3n://ngc-practice/exes/phyml.py \
         --reducer s3n://ngc-practice/exes/mpest.py \
 
-Anyway, this works on my single node cluster. Brilliant! 
+At the moment this fails with an error at the reducer step.  This is because the mpest binary in `aws.32bit.exes.tar.gz` isn't compiled correctly. 
 
 **Instructions derived from:**
 
