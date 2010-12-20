@@ -10,8 +10,20 @@ import shlex
 import tempfile
 import random
 import getpass
+import ConfigParser
 from tree import Tree
 from subprocess import *
+import platform 
+
+
+
+
+def setup_configuration(setupfile):
+    # globals settings (e.g, config paths..)
+    config = ConfigParser.RawConfigParser()
+    config.read(setupfile)
+    return config
+
 
 def oneliner2phylip(line):
     seqs = line.split(',')
@@ -25,9 +37,9 @@ def oneliner2phylip(line):
     return alignment
 
 
-def phyml(args):
+def phyml(config,system):
     """sends the individual
-    cat practice_alignments/3.align.oneliners.txt | ./seqcap.py fasttree
+    cat practice_alignments/3.align.oneliners.txt | ./phyml.py
     """
     
     for line in sys.stdin:
@@ -35,37 +47,47 @@ def phyml(args):
         phylip = oneliner2phylip(line) # convert line to phylip
         
         # SETUP TEMP FILE
-        temp_in = tempfile.NamedTemporaryFile(suffix='.out', dir="/mnt/var/lib/hadoop/tmp")
+        temp_in = tempfile.NamedTemporaryFile(suffix='.out', dir=config.get(system,'tempdir'))
         for line in phylip:
             temp_in.write(line)
         temp_in.seek(0)     # move pointer to beginning of file
         
         # RUN PHYML
-        # /user/nick/
-        #cli = 'bin/./PhyML3linux64 --input %s' % (temp_in.name)
-        cli = 'bin/./PhyML3 --input %s' % (temp_in.name)
+        cli = '%s/%s/./%s --input %s' % (os.getcwd(), \
+            config.get(system, 'binarydir'), config.get(system, 'phyml_exe'), \
+            temp_in.name)
+            
         cli_parts = shlex.split(cli)
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE)
         ft.communicate()[0]
         
         # EXTRACT RESULTS
         temp_string = os.path.split(temp_in.name)[1].split('.')[0]
-        treefile =  '/mnt/var/lib/hadoop/tmp/%s.out_phyml_tree.txt' % (temp_string)
+        treefile =  config.get(system,'tempdir') + '/%s.out_phyml_tree.txt' % (temp_string)
         newick = open(treefile,'r').readlines()[0].strip()
         
         # ROOT TREE
         tree = Tree(newick)
         tree.set_outgroup('anoCar2')
         newick = tree.write(format=5)
-        print newick.strip()
         
         # CLEAN UP TEMPFILES
         temp_in.close()
-        for filename in glob.glob('/mnt/var/lib/hadoop/tmp/%s.*' % (temp_string)) :
+        for filename in glob.glob('%s/%s.*' % (config.get(system,'tempdir'), temp_string)) :
             os.remove( filename )
+        
+        # PRINT TREE TO STOUT
+        print newick.strip()
+
 
 def main():
-    phyml(None)
+    
+    if platform.system() == 'Darwin':
+        config = setup_configuration('bin/setup.cfg')
+        phyml(config, system = 'OSX_setup')
+    else:
+        config = setup_configuration('bin/setup.cfg')
+        phyml(config, system = 'AWS_setup')
 
 if __name__ == '__main__':
     main()

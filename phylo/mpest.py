@@ -6,61 +6,90 @@ import os
 import sys 
 sys.path.append('.')
 sys.path.append('bin')
+sys.path.append('osx.phylo.tar')
 import glob
 import shlex
-import tempfile
 import random
+import tempfile
+import platform
+import ConfigParser
 from tree import Tree
 from subprocess import *
 
-def mpest(args):
-    
-    def create_control_files(path):
-        """explaination"""
-        base_path, tree_file = os.path.split(path)
+def setup_configuration(setupfile):
+    # globals settings (e.g, config paths..)
+    config = ConfigParser.RawConfigParser()
+    config.read(setupfile)
+    return config
 
-        control_file = '.'.join([tree_file.split('.')[0],'control'])
-        fout = open(os.path.join(base_path, control_file),'w')
+def mpest(config, system):
+    
+    def create_control_files(rooted_trees_path):
+        """path = directory to rooted trees"""
+        control_file = os.path.join(config.get(system,'tempdir'),'rooted.control')
+        fout = open(os.path.join(control_file),'w')
+        
         # open up the input tree file and get the first tree
-        tree_file_contents = open(path,'r').readlines()
+        tree_file_contents = open(rooted_trees_path,'r').readlines()
         tree = tree_file_contents[0].strip()
         tree = Tree(tree)
         taxa_names =  tree.get_leaf_names()
-        #pdb.set_trace()
-        taxa_string  = ['{0}\t1\t{0}'.format(taxa) for taxa in taxa_names]
-        template_info = {'filename':path,
+        taxa_string  = ['%s\t1\t%s' % (taxa, taxa) for taxa in taxa_names]
+        template_info = {'filename':rooted_trees_path,
                         'tree_count':len(tree_file_contents),
                         'numb_taxa':len(taxa_names),
                         'taxa_details':'\n'.join(taxa_string)}
-        # needs to go to format()
         template = "%(filename)s\n0\n%(tree_count)s %(numb_taxa)s\n%(taxa_details)s\n0\n" % template_info
         fout.write(template)
         fout.close()
     
-    def execute_mpest():
+    def execute_mpest(rooted_trees):
+        
+        # SETUP FILE PATHS AND SEED VALUE
+        control_file = os.path.join(config.get(system, 'tempdir'), 'rooted.control')
         seed = random.randint(0,1000000)
-        cli = "bin/./mpestBFV1 rooted.control %s mpest.species.tree" % (seed)
+        mpest_trees = os.path.join(config.get(system, 'tempdir'), 'mpest.species.tree')
+       
+        # RUN MPEST
+        # ./mpest control.file int_seed output_file
+        cli = "%s/./%s %s %s %s" \
+            % (config.get(system, 'binarydir'), config.get(system, 'mpest_exe'), control_file, seed, mpest_trees)
         cli_parts = shlex.split(cli)
         mp = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE)
         mp.communicate()[0]
         
-        for line in open('mpest.species.tree'):
-            print line
+        if platform.system() == 'Darwin':
+            for line in open('tmp/rooted.trees.mpest','r'):
+                print line
+        else:
+            for line in open('tmp/rooted.trees.mpestout','r'):
+                print line
     
-    fout = open('rooted.trees','w')
+    # MAIN CODE 
+    rooted_trees_path = os.path.join(config.get(system,'tempdir'),'rooted.trees')
+    rooted_trees = open(rooted_trees_path,'w')
+    
     for line in sys.stdin:
-        fout.write(line)
-    fout.close()
+        rooted_trees.write(line)
+    rooted_trees.close()
     
-    create_control_files('rooted.trees')
-    execute_mpest()
+    create_control_files(rooted_trees_path)
+    execute_mpest(rooted_trees)
     
     # CLEAN UP TREE/STAT FILES
-    for filename in glob.glob('rooted.*') :
+    tempfiles = os.path.join(config.get(system,'tempdir'),'rooted.*')
+    for filename in glob.glob(tempfiles):
         os.remove(filename)
 
 def main():
-    mpest(None)
+    
+    if platform.system() == 'Darwin':
+        config = setup_configuration('bin/setup.cfg')
+        mpest(config, system = 'OSX_setup')
+    else:
+        config = setup_configuration('bin/setup.cfg')
+        mpest(config, system = 'AWS_setup')
+
     
 if __name__ == '__main__':
     main()
