@@ -16,7 +16,7 @@ Tools to pipeline:
 -----------------
 
 * [Lastz](http://www.bx.psu.edu/miller_lab/dist/README.lastz-1.01.50/README.lastz-1.01.50.html#intro)
-    Sequence alignment program.  Genome scale alignmnets
+    Sequence alignment program.  Genome scale alignments.
     
 * [Muscle](http://www.ebi.ac.uk/Tools/msa/muscle/)
     Multiple alignment program.
