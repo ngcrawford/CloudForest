@@ -1,4 +1,4 @@
-Basic Setup for OS X
+Basic Hadoop Setup for OS X
 --------------------
 
 1. Download hadoop from one of the [mirrors](http://www.apache.org/dyn/closer.cgi/hadoop/core/)
@@ -54,15 +54,10 @@ Using Your Local Hadoop Node:
 
         $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/mpest.py mpest.py
         $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/phyml.py phyml.py
-        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/tree.py tree.py
-        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/newick.py newick.py
-        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/PhyML3 PhyML_3.0
-        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/mpestBFV1 mpestBFV1
         $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/practice_alignments/3.align.oneliners.txt 3.align.oneliners.txt
         $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/temp/executables.tar.gz
-        
 
-2. Run the streaming command.
+2. Run the streaming command. Note that the `-file` arguments automatically update the files on the hadoop cluster so you can easily test things with out have to constantly `copyFromlocal`.
 
         $ ./bin/hadoop jar /Users/nick/Desktop/hadoop-0.21.0/mapred/contrib/streaming/hadoop-0.21.0-streaming.jar \
         -file /Users/nick/Desktop/Code/BioAWS/temp/practice_alignments/3.align.oneliners.txt \
@@ -88,11 +83,13 @@ Using AWS:
 
 1. Create an AWS account and an s3 bucket. Here I use `ngc-practice`.
 
-2. Upload the `aws.32bit.exes.tar.gz` archive and the mapper and reducer scripts (`phyml.py` and `mpest.py`, respectively).
+2. Upload the `aws.32bit.exes.tar.gz` archive and the mapper and reducer scripts (`phyml.py` and `mpest.py`, respectively) to a sub folder called `exes`.
 
-3. Setup the Ruby cli so you can access a mapreduce setup from the command line
+3. Upload the test data to `s3n://ngc-practice/data/3.align.oneliners.txt`
 
-4. Run the streaming command on AWS.
+3. Setup the Ruby cli so you can access Amazons mapreduce setup from the command line.  Instructions [here](http://developer.amazonwebservices.com/connect/entry.jspa?externalID=2264).
+
+4. Run the streaming command on AWS. You'll need to add the cli files to your path first.
 
         elastic-mapreduce --create --stream --enable-debugging \
         --cache-archive s3n://ngc-practice/exes/aws.32bit.exes.tar.gz#bin \
@@ -101,12 +98,10 @@ Using AWS:
         --mapper s3n://ngc-practice/exes/phyml.py \
         --reducer s3n://ngc-practice/exes/mpest.py \
 
-At the moment this fails with an error at the reducer step.  This is because the mpest binary in `aws.32bit.exes.tar.gz` isn't compiled correctly. 
 
 **Instructions derived from:**
 
 http://www.infosci.cornell.edu/hadoop/mac.html
-
 http://hadoop-karma.blogspot.com/2009/05/running-hadoop-020-pseudo-distributed.html
 
 **More here:**
