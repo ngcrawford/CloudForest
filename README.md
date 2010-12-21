@@ -3,6 +3,8 @@ Welcome to BioAWS
 
 This repository serves to hold code for running basic biological tools on Amazon Web Services Hadoop clusters.
 
+You can find instructions in the [wiki](https://github.com/ngcrawford/BioAWS/wiki/Instructions)
+
 ![Algorithm](https://github.com/ngcrawford/BioAWS/blob/master/algorithm_diagram.png)
 
 Tools pipelined:
@@ -18,7 +20,7 @@ Tools to pipeline:
 -----------------
 
 * [Lastz](http://www.bx.psu.edu/miller_lab/dist/README.lastz-1.01.50/README.lastz-1.01.50.html#intro)
-    Sequence alignment program.  Genome scale alignmnets
+    Sequence alignment program.  Genome scale alignments.
     
 * [Muscle](http://www.ebi.ac.uk/Tools/msa/muscle/)
     Multiple alignment program.
