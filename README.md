@@ -4,7 +4,7 @@ Welcome to BioAWS
 This repository serves to hold code for running basic biological tools on Amazon Web Services Hadoop clusters.
 
 ![Algorithm](algorithm_diagram.png)
-![Algorithm](https://github.com/ngcrawford/BioAWS/raw/master/foo.png)
+![Algorithm](https://github.com/ngcrawford/BioAWS/raw/master/algorithm_diagram.png)
 You can find instructions in the [wiki](https://github.com/ngcrawford/BioAWS/wiki/Instructions)
 
 
