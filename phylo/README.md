@@ -102,6 +102,7 @@ Using AWS:
 **Instructions derived from:**
 
 http://www.infosci.cornell.edu/hadoop/mac.html
+
 http://hadoop-karma.blogspot.com/2009/05/running-hadoop-020-pseudo-distributed.html
 
 **More here:**
