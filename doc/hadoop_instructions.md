@@ -62,6 +62,8 @@ Using Your Local Hadoop Node:
         $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/phylo/osx.phylo.tar.gz osx.phylo.tar.gz 
         $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/phylo/setup.cfg setup.cfg
         
+        $ bin/hadoop dfs -copyFromLocal /Users/nick/Desktop/Code/BioAWS/phylo/183Loci_29Species.oneliners.align 183Loci_29Species.oneliners.align
+        
         
 2. Run the streaming command.
 
@@ -78,12 +80,26 @@ Using Your Local Hadoop Node:
         
 3. Run the streaming command on AWS. The order of the commands is important with the mapper and reducer called last.
 
-    elastic-mapreduce --create --stream --enable-debugging \
-    --cache-archive s3n://ngc-practice/exes/aws.phylo.tar.gz#bin \
-    --input s3n://ngc-practice/data/3.align.oneliners.txt \
-    --output s3n://ngc-practice/output \
-    --mapper s3n://ngc-practice/exes/phyml.py \
-    --reducer s3n://ngc-practice/exes/mpest.py \
+        # Test command:
+        
+         elastic-mapreduce --create --alive --stream \
+        --cache-archive s3n://ngc-practice/exes/aws.phylo.tar.gz#bin \
+        --input s3n://ngc-practice/data/3.align.oneliners.txt \
+        --output s3n://ngc-practice/output_new \
+        --mapper s3n://ngc-practice/exes/phyml.py \
+        --reducer s3n://ngc-practice/exes/mpest.py \
+
+
+        # Real command: MAKE SURE YOU DON'T HAVE UNDERSCORES IN THE FILE NAMES
+
+        elastic-mapreduce --create --stream --num-instances 5 \
+        --jobconf mapreduce.job.reduces=1 \
+        --cache-archive s3n://ngc-practice/exes/aws.phylo.tar.gz#bin \
+        --input s3n://ngc-practice/data/183Loci.29Species.oneliners.align \
+        --output s3n://ngc-practice/output_new \
+        --mapper s3n://ngc-practice/exes/phyml.py \
+        --reducer s3n://ngc-practice/exes/mpest.py \
+       
        
 
 The trick is that you need to use 'cacheFile' on all the modules and binaries you want to 'call' from your mapper and reducer.  This ensures that they are accessible from the compute nodes.  The other trick is to include the following lines in your python code before the homemade module imports.
