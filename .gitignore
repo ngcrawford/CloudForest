@@ -9,6 +9,7 @@
 *.pdf
 *.pyc
 *.tre*
+tmp/
 __init__.py
 aws_config/
 *alias*
