@@ -179,7 +179,7 @@ def reducer(key, trees):
         # SETUP FILE PATHS AND SEED VALUE
         control_file = os.path.join('tmp', 'rooted.control')
         seed = random.randint(0,1000000)
-        mpest_trees = os.path.join('tmp', 'mpest.species.tree')
+        mpest_trees = os.path.join('tmp', 'mpest.species.trees')
        
         # RUN MPEST
         # ./mpest control.file int_seed output_file
@@ -190,10 +190,10 @@ def reducer(key, trees):
         
         trees = []
         if platform.system() == 'Darwin':
-            for line in open('tmp/mpest.species.tree','r'):
+            for line in open('tmp/mpest.species.trees','r'):
                  trees.append(line)
         else:
-            for line in open('tmp/rooted.trees.mpestout','r'):
+            for line in open('tmp/mpest.species.treesout','r'):
                 trees.append(line)
                 
         species_tree = get_mpest_tree(trees)
