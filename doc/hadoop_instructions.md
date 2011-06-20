@@ -109,6 +109,26 @@ The trick is that you need to use 'cacheFile' on all the modules and binaries yo
 
 Anyway, this works on my single node cluster. Brilliant! 
 
+
+**Dumbo Instructions:**
+
+Now you should be able to run Dumbo jobs on Elastic MapReduce. To start a cluster, you can use the Ruby client as so:
+
+$ elastic-mapreduce --create --alive
+
+SSH into the cluster using your EC2 keypair as user hadoop and install Dumbo with the following two commands:
+
+$ wget http://bit.ly/ezsetup
+$ sudo python ezsetup dumbo
+
+Then you can run your Dumbo scripts. I was able to run the ipcount.py demo with the following command.
+
+$ dumbo start ipcount.py -hadoop /home/hadoop \
+-input s3://anhi-test-data/wordcount/input/ \
+-output s3://anhi-test-data/output/dumbo/wc/
+
+
+
 **Instructions derived from:**
 
 http://www.infosci.cornell.edu/hadoop/mac.html
