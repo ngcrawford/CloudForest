@@ -173,8 +173,6 @@ def reducer(key, trees):
             
             species_tree = species_tree.write(format=3)
             return species_tree
-
-        
         
         # SETUP FILE PATHS AND SEED VALUE
         control_file = os.path.join('tmp', 'rooted.control')
@@ -193,7 +191,7 @@ def reducer(key, trees):
             for line in open('tmp/mpest.species.trees','r'):
                  trees.append(line)
         else:
-            for line in open('tmp/mpest.species.treesout','r'):
+            for line in open('tmp/mpest.species.trees','r'):
                 trees.append(line)
                 
         species_tree = get_mpest_tree(trees)
