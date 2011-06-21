@@ -29,13 +29,13 @@ def mapper(key, line):
     sys.path.append('bin')
     import glob
     import shlex
-    import tempfile
     import random
     import getpass
-    import ConfigParser
-    from subprocess import Popen, PIPE
+    import tempfile
     import platform
+    import ConfigParser
     from tree import Tree
+    from subprocess import Popen, PIPE
     
     def oneliner2phylip(line):
         seqs = line.split(',')
@@ -47,7 +47,6 @@ def mapper(key, line):
             taxa_name = taxa_name.strip()
             alignment += '%-*s%s\n' % (10, taxa_name, seq)
         return alignment
-    
     
     if platform.system() == 'Darwin':
         system = 'OSX_setup'
@@ -102,13 +101,13 @@ def reducer(key, trees):
     sys.path.append('bin')
     import glob
     import shlex
-    import tempfile
     import random
     import getpass
-    import ConfigParser
-    from subprocess import Popen, PIPE
+    import tempfile
     import platform
+    import ConfigParser
     from tree import Tree
+    from subprocess import Popen, PIPE
     
     if platform.system() == 'Darwin':
         system = 'OSX_setup'
