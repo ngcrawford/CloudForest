@@ -34,6 +34,7 @@ import getpass
 import itertools
 import tempfile
 import platform
+from copy import copy, deepcopy
 import numpy as np
 from mrjob.job import MRJob
 from subprocess import Popen, PIPE
@@ -88,13 +89,14 @@ class BootstrapAWS(MRJob):
             return bootstrap_replicates
 
         def onelinerAlignment2Array(line):
-            import numpy as np
             seqs = line.split(",")
             label_seqs = zip(seqs[:-1:2],seqs[1::2])
             taxa = []
             bases = []
             for taxon, seq in label_seqs:
-                bases.append([seq[count] for count, item in enumerate(seq)])
+                seq_list = copy([seq[count] for count, item in enumerate(seq)])
+                seq_array = np.array(seq_list)
+                bases.append(seq_array)
                 taxon = taxon.strip()
                 taxa.append(taxon)
             bases = np.array(bases)
@@ -104,7 +106,7 @@ class BootstrapAWS(MRJob):
             import itertools
             oneliner = ''
             for count, seq in enumerate(bases):
-                oneliner += taxa[count]+","+''.join(itertools.chain(bases[0])) + ","
+                oneliner += taxa[count]+","+''.join(itertools.chain(bases[count])) + ","
             oneliner = oneliner[:-1]
             return oneliner
     
@@ -115,10 +117,10 @@ class BootstrapAWS(MRJob):
         for bcount, bootrep in enumerate(bootstapped_loci):                 
             for lcount, locus in enumerate(bootrep):
                 taxa, numpy_alignment = onelinerAlignment2Array(locus)      # convert loci to 2d arrays
-                bases_by_col = numpy_alignment.transpose()                  # transpose so columns are bootstapped   
-                bootrep = bootstrap(bases_by_col, 1, 0)                     # generate one replicate of bootstrapped columns
-                bootrep = bootrep[0].transpose()                            # tranpose back to rows of sequences
-                oneliner = array2OnelinerAlignment(taxa, bootrep)           # back to oneliner
+                bases_by_col = np.column_stack(numpy_alignment)             # transpose so columns are bootstapped   
+                shuffled = bootstrap(bases_by_col, 1, 0)                    # generate one replicate of bootstrapped columns
+                shuffled = np.column_stack(shuffled[0])                     # tranpose back to rows of sequences
+                oneliner = array2OnelinerAlignment(taxa, shuffled)          # back to oneliner
                 yield bcount, oneliner
         
     def boot_reducer(self, bootstrap_replicate, alignment):
