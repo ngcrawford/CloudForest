@@ -23,26 +23,30 @@ The author may be contacted at ngcrawford@gmail.com
 """
 
 
-def bootstrap(key, line):
-    """make bootstrap replicates."""
-    import os
-    import sys 
-    sys.path.append('.')
-    sys.path.append('bin')
-    import glob
-    import shlex
-    import random
-    import getpass
-    import itertools
-    import tempfile
-    import platform
-    import ConfigParser
-    import numpy as np
-    from copy import deepcopy
-    # from tree import Tree
-    from subprocess import Popen, PIPE
+
+
+
+class Bootstrap:
+    def __init__(self):
+        import os
+        import sys 
+        sys.path.append('.')
+        sys.path.append('bin')
+        import glob
+        import shlex
+        import random
+        import getpass
+        import itertools
+        import tempfile
+        import platform
+        import ConfigParser
+        import numpy as np
+        # from tree import Tree
+        from subprocess import Popen, PIPE
     
-    def bootstrap(sample, replicates=10, start=0):
+    def bootstrap(self, sample, replicates, start):
+        import numpy as np
+        from copy import deepcopy
         """bootstrap(initial_sample, replicates=10)
 
         Create boostrapped replicates of an a numpy array.  Results
@@ -84,8 +88,9 @@ def bootstrap(key, line):
 
             bootstrap_replicates.append(boot_rep)
         return bootstrap_replicates
-    
-    def onelinerAlignment2Array(line):
+
+    def onelinerAlignment2Array(self, line):
+        import numpy as np
         seqs = line.split(",")
         label_seqs = zip(seqs[:-1:2],seqs[1::2])
         taxa = []
@@ -97,100 +102,106 @@ def bootstrap(key, line):
         bases = np.array(bases)
         return (taxa, bases)
     
-    def array2OnelinerAlignment(taxa, bases):
+    def array2OnelinerAlignment(self, taxa, bases):
+        import itertools
         oneliner = ''
         for count, seq in enumerate(bases):
             oneliner += taxa[count]+","+''.join(itertools.chain(bases[0])) + ","
         return oneliner
+
+    
+    def __call__(self, key, line):      
+        loci = line.strip().split(';')
+        loci = loci[:-1]
+        bootreps = int(self.params["bootreps"])
+        bootstapped_loci = self.bootstrap(loci, bootreps, 0)                                  # first bootstrap the loci
+        for bcount, bootrep in enumerate(bootstapped_loci):                 
+            for lcount, locus in enumerate(bootrep):
+                taxa, numpy_alignment = self.onelinerAlignment2Array(locus)      # convert loci to 2d arrays
+                bases_by_col = numpy_alignment.transpose()                  # transpose so columns are bootstapped   
+                bootrep = self.bootstrap(bases_by_col, 1, 0)             # generate one replicate of bootstrapped columns
+                bootrep = bootrep[0].transpose()                            # tranpose back to rows of sequences
+                oneliner = self.array2OnelinerAlignment(taxa, bootrep)                      # back to oneliner
+                yield bcount, oneliner
         
-    loci = line.strip().split(';')
-    loci = loci[:-1]
-    bootstapped_loci = bootstrap(loci)                                  # first bootstrap the loci
-    for bcount, bootrep in enumerate(bootstapped_loci):                 
-        for lcount, locus in enumerate(bootrep):
-            taxa, numpy_alignment = onelinerAlignment2Array(locus)      # convert loci to 2d arrays
-            bases_by_col = numpy_alignment.transpose()                  # transpose so columns are bootstapped   
-            bootrep = bootstrap(bases_by_col, replicates=1)             # generate one replicate of bootstrapped columns
-            bootrep = bootrep[0].transpose()                            # tranpose back to rows of sequences
-            oneliner = array2OnelinerAlignment(taxa, bootrep)                      # back to oneliner
-            yield bcount, oneliner
+    def phyml(bootrep, line):
+        import os
+        import sys 
+        sys.path.append('.')
+        sys.path.append('bin')
+        import glob
+        import shlex
+        import random
+        import getpass
+        import tempfile
+        import platform
+        import ConfigParser
+        from tree import Tree
+        from subprocess import Popen, PIPE
+    
+        def oneliner2phylip(line):
+            seqs = line.split(',')
+            label_seqs = zip(seqs[:-1:2],seqs[1::2])
+            taxa_count = len(label_seqs)
+            seq_length = len(label_seqs[0][1])
+            alignment = "%s %s\n" % (taxa_count, seq_length) # add header
+            for taxa_name, seq in label_seqs:
+                taxa_name = taxa_name.strip()
+                alignment += '%-*s%s\n' % (10, taxa_name, seq)
+            return alignment
+
+        if platform.system() == 'Darwin':
+            system = 'OSX_setup'
+            phyml_exe = 'PhyML3OSX'
+            mpest_exe = 'mpestOSX'
+        else:
+            system = 'AWS_setup'
+            phyml_exe = 'PhyML3linux32'
+            mpest_exe = 'mpestEC2'
+
+        user = getpass.getuser()
+        phylip = oneliner2phylip(line) # convert line to phylip
+
+        # SETUP TEMP FILE
+        temp_in = tempfile.NamedTemporaryFile(suffix='.out', dir='tmp/')
+        for line in phylip:
+            temp_in.write(line)
+        temp_in.seek(0)     # move pointer to beginning of file
+
+        # RUN PHYML
+        cli = '%s/%s/./%s --input %s' % (os.getcwd(), \
+            'bin/', phyml_exe, temp_in.name)
+
+        cli_parts = shlex.split(cli)
+        ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE)
+        ft.communicate()[0]
+
+        # EXTRACT RESULTS
+        temp_string = os.path.split(temp_in.name)[1].split('.')[0]
+        treefile =  os.path.join('tmp','%s.out_phyml_tree.txt' % (temp_string))
+        newick = open(treefile,'r').readlines()[0].strip()
+
+        # PRINT TREE TO STOUT
+        tree = newick.strip()
+        yield bootrep, tree
 
 
-def phyml(bootrep, line):
-    import os
-    import sys 
-    sys.path.append('.')
-    sys.path.append('bin')
-    import glob
-    import shlex
-    import random
-    import getpass
-    import tempfile
-    import platform
-    import ConfigParser
-    from tree import Tree
-    from subprocess import Popen, PIPE
+    def reducer(bootstrap_replicate, alignment):
+        for item in alignment:
+            yield bootstrap_replicate, item  
 
-    def oneliner2phylip(line):
-        seqs = line.split(',')
-        label_seqs = zip(seqs[:-1:2],seqs[1::2])
-        taxa_count = len(label_seqs)
-        seq_length = len(label_seqs[0][1])
-        alignment = "%s %s\n" % (taxa_count, seq_length) # add header
-        for taxa_name, seq in label_seqs:
-            taxa_name = taxa_name.strip()
-            alignment += '%-*s%s\n' % (10, taxa_name, seq)
-        return alignment
-
-    if platform.system() == 'Darwin':
-        system = 'OSX_setup'
-        phyml_exe = 'PhyML3OSX'
-        mpest_exe = 'mpestOSX'
-    else:
-        system = 'AWS_setup'
-        phyml_exe = 'PhyML3linux32'
-        mpest_exe = 'mpestEC2'
-
-
-    user = getpass.getuser()
-    phylip = oneliner2phylip(line) # convert line to phylip
-
-    # SETUP TEMP FILE
-    temp_in = tempfile.NamedTemporaryFile(suffix='.out', dir='tmp/')
-    for line in phylip:
-        temp_in.write(line)
-    temp_in.seek(0)     # move pointer to beginning of file
-
-    # RUN PHYML
-    cli = '%s/%s/./%s --input %s' % (os.getcwd(), \
-        'bin/', phyml_exe, temp_in.name)
-
-    cli_parts = shlex.split(cli)
-    ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE)
-    ft.communicate()[0]
-
-    # EXTRACT RESULTS
-    temp_string = os.path.split(temp_in.name)[1].split('.')[0]
-    treefile =  os.path.join('tmp','%s.out_phyml_tree.txt' % (temp_string))
-    newick = open(treefile,'r').readlines()[0].strip()
-
-    # PRINT TREE TO STOUT
-    tree = newick.strip()
-    yield bootrep, tree
-
-
-def reducer(bootstrap_replicate, alignment):
-    for item in alignment:
-        yield bootstrap_replicate, item  
-
-def reducer2(bootstrap_replicate, tree):
-    yield bootstrap_replicate, tree
+    def reducer2(bootstrap_replicate, tree):
+        yield bootstrap_replicate, tree
     
 if __name__ == '__main__':
-    #main()
+    # fin = open('/Users/nick/Desktop/Code/BioAWS/phylo/practice_alignments/3.align.oneliners.txt','r')
+    # line = fin.readlines()[0]
+    # key = 1
+    # Boot = Bootstrap()
+    # Boot(key,line)
     import dumbo
     job = dumbo.Job()
-    job.additer(bootstrap, reducer, combiner=reducer)
+    job.additer(Bootstrap, reducer, combiner=reducer)
     job.additer(phyml, reducer, combiner=reducer)
     job.run()
     
