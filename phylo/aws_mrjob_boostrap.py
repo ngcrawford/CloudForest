@@ -180,7 +180,6 @@ class BootstrapAWS(MRJob):
         return [self.mr(self.makeReps, self.boot_reducer), 
                 self.mr(self.phyml, self.boot_reducer),]
         
-    
 if __name__ == '__main__':
     BootstrapAWS.run()
     
