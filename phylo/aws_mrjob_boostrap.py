@@ -34,12 +34,19 @@ import getpass
 import itertools
 import tempfile
 import platform
-from copy import copy, deepcopy
 import numpy as np
+from copy import copy, deepcopy
 from mrjob.job import MRJob
 from subprocess import Popen, PIPE
 
 class BootstrapAWS(MRJob):
+    
+    def configure_options(self):
+        super(BootstrapAWS, self).configure_options()
+
+        self.add_passthrough_option(
+            '--bootreps', dest='bootreps2run', default=10, type='int',
+            help='number of bootstrap replicates to generate')    
     
     def makeReps(self, key, line):
 
@@ -113,7 +120,7 @@ class BootstrapAWS(MRJob):
         loci = line.strip().split(';')
         loci = loci[:-1]
         bootreps = int(10)
-        bootstapped_loci = bootstrap(loci, bootreps, 0)                     # first bootstrap the loci
+        bootstapped_loci = bootstrap(loci, self.options.bootreps2run, 0)                     # first bootstrap the loci
         for bcount, bootrep in enumerate(bootstapped_loci):                 
             for lcount, locus in enumerate(bootrep):
                 taxa, numpy_alignment = onelinerAlignment2Array(locus)      # convert loci to 2d arrays
