@@ -15,3 +15,5 @@ __init__.py
 aws_config/
 *alias*
 realdata/
+*phyml_stats.txt
+*phyml_tree.txt

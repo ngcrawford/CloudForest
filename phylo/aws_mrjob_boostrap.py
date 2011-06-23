@@ -120,7 +120,7 @@ class BootstrapAWS(MRJob):
         loci = line.strip().split(';')
         loci = loci[:-1]
         bootreps = int(10)
-        bootstapped_loci = bootstrap(loci, self.options.bootreps2run, 0)                     # first bootstrap the loci
+        bootstapped_loci = bootstrap(loci, self.options.bootreps2run, 0)    # first bootstrap the loci
         for bcount, bootrep in enumerate(bootstapped_loci):                 
             for lcount, locus in enumerate(bootrep):
                 taxa, numpy_alignment = onelinerAlignment2Array(locus)      # convert loci to 2d arrays
