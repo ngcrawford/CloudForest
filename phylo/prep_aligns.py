@@ -1,17 +1,30 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-# open muliple alignmet
-# 
-# Things to check for...
-# 
-# 1.) missing taxa, read in first 5 alignmetns
-# 2.) 
+"""
+This script reads in 
+
+Command line Usage: cat practice_alignments/*.phylip | ./prep_aligns.py > oneliners.txt
+ 
+ Note: you must provide multiple alignments with wildcard. 
+
+Things to check for...
+
+1.) missing taxa, read in first 5 alignments
+2.) """
 
 import sys
 
 def aligns2oneliners():
 
+    def printAlignment(taxa_seq_dict):
+        final_line = ""
+        for key, value in taxa_seq_dict.iteritems():
+            final_line += '%s,%s,' % (key, value)
+        final_line = final_line[:-1]
+        final_line = final_line + ";"
+        sys.stdout.write(final_line)
+    
     # STORAGE DICTIONARIES AND VARIABLES 
     taxa_id_dict = {}
     taxa_seq_dict = {}
@@ -30,12 +43,7 @@ def aligns2oneliners():
             
             # PRINT COMPLETE ALIGNMENT AS LINE  
             if len(taxa_seq_dict) != 0:
-                final_line = ""
-                for key, value in taxa_seq_dict.iteritems():
-                    final_line += '%s,%s,' % (key, value)
-                final_line = final_line[:-1]
-                final_line + "\n"
-                print final_line
+                printAlignment(taxa_seq_dict)
             
             # UPDATE VALUES
             taxa_count = int(taxa_count.strip())
@@ -62,5 +70,9 @@ def aligns2oneliners():
             taxa_seq_dict[taxa_name] = taxa_seq_dict[taxa_name] + line.replace(' ','').strip()
              
         count += 1
+        
+    # PRINT COMPLETE ALIGNMENT AS LINE  
+    if len(taxa_seq_dict) != 0:
+        printAlignment(taxa_seq_dict)
 
 aligns2oneliners()
