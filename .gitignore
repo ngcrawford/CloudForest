@@ -10,6 +10,7 @@
 *.pyc
 *.tre*
 tmp/
+*output*
 __init__.py
 aws_config/
 *alias*
