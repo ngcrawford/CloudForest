@@ -14,6 +14,6 @@ tmp/
 __init__.py
 aws_config/
 *alias*
-realdata/
+real_data/
 *phyml_stats.txt
 *phyml_tree.txt
