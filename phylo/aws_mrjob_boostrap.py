@@ -47,6 +47,10 @@ class BootstrapAWS(MRJob):
         self.add_passthrough_option(
             '--bootreps', dest='bootreps2run', default=10, type='int',
             help='number of bootstrap replicates to generate')    
+        
+        self.add_passthrough_option(
+            '--gene-trees', action="store_true", dest='gene_trees',
+            help='generate gene trees from alignments')
     
     def makeReps(self, key, line):
 
@@ -109,7 +113,7 @@ class BootstrapAWS(MRJob):
             bases = np.array(bases)
             return (taxa, bases)
 
-        def array2OnelinerAlignment( taxa, bases):
+        def array2OnelinerAlignment(taxa, bases):
             import itertools
             oneliner = ''
             for count, seq in enumerate(bases):
@@ -120,7 +124,7 @@ class BootstrapAWS(MRJob):
         loci = line.strip().split(';')
         loci = loci[:-1]
         bootreps = int(10)
-        bootstapped_loci = bootstrap(loci, self.options.bootreps2run, 0)    # first bootstrap the loci
+        bootstapped_loci = bootstrap(loci, self.options.bootreps2run, 1)    # first bootstrap the loci
         for bcount, bootrep in enumerate(bootstapped_loci):                 
             for lcount, locus in enumerate(bootrep):
                 taxa, numpy_alignment = onelinerAlignment2Array(locus)      # convert loci to 2d arrays
@@ -182,10 +186,15 @@ class BootstrapAWS(MRJob):
         newick = open(treefile,'r').readlines()[0].strip()
         
         yield key, newick
-    
+        
     def steps(self):
-        return [self.mr(self.makeReps, self.boot_reducer), 
-                self.mr(self.phyml, self.boot_reducer),]
+        
+        if self.options.gene_trees == False:
+            return [self.mr(self.makeReps, self.boot_reducer), 
+                    self.mr(self.phyml, self.boot_reducer),]
+        
+        if self.options.gene_trees == True:
+            return [self.mr(self.phyml, self.boot_reducer),]
         
 if __name__ == '__main__':
     BootstrapAWS.run()
