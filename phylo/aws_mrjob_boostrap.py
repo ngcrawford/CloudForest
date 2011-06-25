@@ -189,12 +189,12 @@ class BootstrapAWS(MRJob):
         
     def steps(self):
         
-        if self.options.gene_trees == False:
-            return [self.mr(self.makeReps, self.boot_reducer), 
-                    self.mr(self.phyml, self.boot_reducer),]
-        
         if self.options.gene_trees == True:
             return [self.mr(self.phyml, self.boot_reducer),]
+        
+        else:
+            return [self.mr(self.makeReps, self.boot_reducer), 
+                    self.mr(self.phyml, self.boot_reducer),]
         
 if __name__ == '__main__':
     BootstrapAWS.run()
