@@ -29,42 +29,48 @@ Future directions:
 import os
 import sys
 import glob
-import optparse
+import argparse
 import dendropy
 import rpy2.robjects as robjects
 
 def interface():
     """ create commandline interface for script"""
-    p = optparse.OptionParser()
+    p = argparse.ArgumentParser()
     
-    p.add_option('--input-file','-i', type='string',
+    p.add_argument('--input-file','-i',
         help='Path to input file.')
-    p.add_option('--output-dir','-o', type='string',
-        help='Path to output directory.')
-    p.add_option('--outgroup','-g', type='string',
+    p.add_argument('--outgroup','-o',
         help='Name of outgroup.')
-    p.add_option('--taxa','-t',type='string',
-        help='List of all possible taxa in phylogy.\n \
-              Allows for trees with missing taxa to be included.')
-    
-    options, arg = p.parse_args()
+    p.add_argument('--genetrees','-g', action='store_true',
+        help='Name of outgroup.')
+    p.add_argument('--bootstraps','-b', action='store_true',
+        help='Name of outgroup.')
+
+    args = p.parse_args()
     
     # check options for errors, etc.
-    if options.input_file == None:
+    if args.input_file == None:
         print "Input directory required."
         print "Type 'python phybase.py -h' for details" 
         sys.exit()
-    
-    if options.output_dir == None:
-        print "No output directory supplied."
+
+    if args.genetrees == True and args.bootstraps == True:
+        print "You must pick either genetrees or bootstraps,"
+        print "but not both."
+        print "Type 'python phybase.py -h' for details" 
+        sys.exit()
+
+    if args.genetrees == False and args.bootstraps == False:
+        print "You must select either --genetrees or --bootstraps"
         print "Type 'python phybase.py -h' for details" 
         sys.exit()
     
-    if options.taxa == None:
-        print "No list of taxa supplied."
-        print "Type 'python phybase.py -h' for details"
-        
-    return options
+    if args.outgroup == None:
+        print 'You much define an outgroup'
+        print "Type 'python phybase.py -h' for details" 
+        sys.exit()
+
+    return args
 
 def cleanPhybaseTree(tree):
     tree.strip("\"")
@@ -105,9 +111,6 @@ def cleanPhyMLTree(tree):
                                                     # to decimals (e.g., 1e-22 = 0.000000)
     return tree
     
-
-
-
 def phybase(trees, outgroup, all_taxa):
     """ generate Steac and Star trees from a list of trees. Requires Phybase and rpy2."""
     
@@ -141,37 +144,39 @@ def phyMLTrees(directory):
             tree_list.append(tree)
     return tree_list
     
-def consensus():
-
+def consensus(tree_list):
     trees = dendropy.TreeList()
-    for tree_file in ['pythonidae.mb.run1.t',
-            'pythonidae.mb.run2.t',
-            'pythonidae.mb.run3.t',
-            'pythonidae.mb.run4.t']:
-        trees.read_from_path(
-                tree_file,
-                'nexus',
-                tree_offset=20)
-    con_tree = trees.consensus(min_freq=0.95)
+    for tree in tree_list:
+        t = dendropy.Tree()
+        t.read_from_string(tree,'newick')
+        tree.append(tree)
+
+    con_tree = trees.consensus(min_freq=0.5)
     print(con_tree.as_string('newick'))
 
-
-def parseEMR(file):
+def getTaxa(tree):
+    t = dendropy.Tree()
+    t.read_from_string(tree, 'newick', preserve_underscores=True)
+    taxa = t.taxon_set.labels()
+    return taxa
+    
+def parseBootreps(args):
+    
     bootreps = {}
-    fin = open(file,'rU')
+    fin = open(args.input_file,'rU')
+    taxa = []
     for count, line in enumerate(fin):
         key, tree = line.split("\t")
         tree = cleanPhyMLTree(tree)
+        if count == 0: taxa = getTaxa(tree.strip())
         if bootreps.has_key(key) != True: bootreps[key] = [tree]
         else: bootreps[key].append(tree)  
     
-    taxa = ['mus_mus', 'cal_jac', 'oto_gar', 'pon_abe', 'pap_ham', \
-            'rhe_mac', 'hom_sap', 'gor_gor', 'nom_leu', 'pan_tro']
     steac_trees = []
     star_trees = []
     for count, key in enumerate(bootreps.keys()):
         trees = bootreps[key]
-        star_tree, steac_tree = phybase(trees, 'mus_mus', taxa)
+        star_tree, steac_tree = phybase(trees, 'HomSapie', taxa)
         steac_trees.append(steac_tree)
         star_trees.append(star_tree)
         print 'processed', count
@@ -182,34 +187,43 @@ def parseEMR(file):
     
     print 'star_trees'
     for tree in star_trees:
-        print tree
-    
-def main():
-    
-    options = interface()
-    taxa = options.taxa.strip().split()
-    
+       print tree
+
+def parseGenetrees(args):
+    """docstring for parse"""
+    fin = open(args.input_file,'rU')
+    taxa = []
     trees = []
-    for count, tree in enumerate(open(options.input_file, 'r')):
+    for count, line in enumerate(fin):
+        tree = line.strip()
         tree = cleanPhyMLTree(tree)
         trees.append(tree)
+        if count == 0: 
+            taxa = getTaxa(tree)
+            if args.outgroup not in taxa:
+                print args.outgroup, 'not in taxa:', taxa
+                sys.exit() 
+        if count > 10: break
+
+    star_tree, steac_tree = phybase(trees, args.outgroup, taxa)
+
+    template =  """#NEXUS
+begin trees;
+tree 'STAR' = %s
+tree 'STEAC' = %s
+end;""" % (star_tree, steac_tree)
+    print template
+
     
-    star_tree, steac_tree = phybase(trees, options.outgroup, taxa)
+def main():
+    args = interface()
     
-    basename = os.path.basename(options.input_file)
-    star_out =  os.path.join(options.output_dir, basename + '.star.tre')
-    steac_out = os.path.join(options.output_dir, basename + '.steac.tre')
+    if args.bootstraps == True:
+        parseBootreps(args)
     
-    star_out = open(star_out,'w')
-    steac_out = open(steac_out,'w')
-    
-    star_out.write(star_tree)
-    steac_out.write(steac_tree)
-        
-    star_out.close()
-    steac_out.close()
-    
+    if args.genetrees == True:
+        parseGenetrees(args)
     
 if __name__ == '__main__':
-    #parseEMR("real_data/primate_bootreps_50")
+    main()
     pass
