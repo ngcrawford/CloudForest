@@ -1,3 +1,9 @@
+Generating Genetrees from Loci:
+
+1.) run `nexus2oneliner.py -- `
+
+python aws_mrjob_boostrap.py -r emr --bootreps 1 --num-ec2-instances 10  --archive aws.phylo.tar.gz#bin --gene-trees < reptiles-extended-with-outgroup.oneliners > reptile.trees
+
 Bootstrapping Instructions:
 ---------------------------
 
@@ -14,3 +20,9 @@ Bootstrapping Instructions:
         < oneliners.txt > trees_out
 
 4.) Calculate Steac and Star Trees...
+
+
+
+
+
+python aws_mrjob_boostrap.py -r emr --num-ec2-instances 19 --bootreps 50 --archive=osx.phylo.tar.gz#bin < reptiles-extended-with-outgroup.oneliners > aws.reptile.trees
