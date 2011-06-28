@@ -45,6 +45,8 @@ def interface():
         help='Name of outgroup.')
     p.add_argument('--bootstraps','-b', action='store_true',
         help='Name of outgroup.')
+    p.add_argument('--print-taxa','-p', action='store_true',
+        help='Print all the taxon names in the first tree')
 
     args = p.parse_args()
     
@@ -65,7 +67,7 @@ def interface():
         print "Type 'python phybase.py -h' for details" 
         sys.exit()
     
-    if args.outgroup == None:
+    if args.print_taxa != True and args.outgroup == None:
         print 'You much define an outgroup'
         print "Type 'python phybase.py -h' for details" 
         sys.exit()
@@ -160,8 +162,7 @@ def getTaxa(tree):
     taxa = t.taxon_set.labels()
     return taxa
     
-def parseBootreps(args):
-    
+def parseBootreps(args):  
     bootreps = {}
     fin = open(args.input_file,'rU')
     taxa = []
@@ -203,7 +204,6 @@ def parseGenetrees(args):
             if args.outgroup not in taxa:
                 print args.outgroup, 'not in taxa:', taxa
                 sys.exit() 
-        if count > 10: break
 
     star_tree, steac_tree = phybase(trees, args.outgroup, taxa)
 
@@ -214,9 +214,23 @@ tree 'STEAC' = %s
 end;""" % (star_tree, steac_tree)
     print template
 
+def print_taxa(args):
+    fin = open(args.input_file,'rU')
+    line = fin.readline() 
+    if len(line.split('\t')) == 2:
+        line = line.split('\t')[-1]
+    taxa = getTaxa(line)
+    taxa.sort()
+    for count, taxon in enumerate(taxa):
+        print taxon
+    print count, 'total taxa.'
     
 def main():
     args = interface()
+    
+    if args.print_taxa == True:
+        print_taxa(args)
+        sys.exit()
     
     if args.bootstraps == True:
         parseBootreps(args)
