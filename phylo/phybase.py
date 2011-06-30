@@ -177,7 +177,7 @@ def parseBootreps(args):
     star_trees = []
     for count, key in enumerate(bootreps.keys()):
         trees = bootreps[key]
-        star_tree, steac_tree = phybase(trees, 'HomSapie', taxa)
+        star_tree, steac_tree = phybase(trees, args.outgroup, taxa)
         steac_trees.append(steac_tree)
         star_trees.append(star_tree)
         print 'processed', count
