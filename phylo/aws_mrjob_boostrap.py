@@ -203,7 +203,7 @@ class BootstrapAWS(MRJob):
         phylip = self.oneliner2phylip(line) # convert line to phylip
         
         # SETUP TEMP FILE
-        if os.path.exists('tmp/') != True:
+        if system == "OSX_setup" and os.path.exists('tmp/') != True:
             os.mkdir('tmp/')
         temp_in = tempfile.NamedTemporaryFile(suffix='.out', dir='tmp/')
         for line in phylip:
@@ -239,32 +239,35 @@ class BootstrapAWS(MRJob):
         phylip = self.oneliner2phylip(alignment)  # convert line to phylip
         
         # SETUP TEMPFILE
-        if os.path.exists('tmp/') != True:
+        if system == "OSX_setup" and os.path.exists('tmp/') != True:
             os.mkdir('tmp/')
+            
         temp_in = tempfile.NamedTemporaryFile(suffix='.out', dir='tmp/')
         for line in phylip:
             temp_in.write(line)
-        temp_in.seek(0)                           # move pointer to beginning of file
+        temp_in.seek(0) 
+        
         temp_dir = os.path.dirname(temp_in.name)
         
         # EXECUTE MR-AIC (AIC output only)
         cli = "%s/%s/./mraic_mod.pl --infile=%s --output_dir=%s >/dev/null 2>&1" % (os.getcwd(), 'bin', temp_in.name, temp_dir)
-        cli_parts = shlex.split(cli)
+        cli_parts = cli.split()
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
-        for fin in glob.glob("tmp/*AIC-*tre*"):
-            AIC_model = fin.split('.')[-2].split("-")[-1]  
-            oneliner = "%s|%s" % (AIC_model, alignment)
-            if self.options.bootreps2run != None:
-                yield 1, oneliner  # give everything the same key so it can be reduced to a 'oneliner' suitable for bootstrapping
-            else:
-                yield key, oneliner
+        
+        # PARSE FILE NAMES IN TMP/ TO GET MODEL
+        aic_dir_string = "tmp/%s.AIC-*tre*" % os.path.basename(temp_in.name)
+        aic_file = glob.glob("tmp/*AIC-*tre*")[0]
+        aic_model = aic_file.split('.')[-2].split("-")[-1]  
+        oneliner = "%s|%s" % (aic_model, alignment)
+        
+        yield 1, oneliner  # give everything the same key so it can be reduced to a 'oneliner' suitable for bootstrapping
       
     def duplicateOneliners(self, key, line):
         """Take lines and duplicate them the number of times
         specified by the --bootreps flag."""
         # line = line.split("\t")[1].strip("\"") 
         reps = self.options.bootreps2run
-        while reps != 0:
+        while reps != 0: 
             yield reps, line
             reps -= 1
     
@@ -277,10 +280,10 @@ class BootstrapAWS(MRJob):
     def lines2Oneliner(self, key, line):
         """Convert multiple alignments with the same key
         to a concatenated oneliner with the same key"""
-        final_line = ''
-        for item in line:
-            final_line += item
-        yield key, final_line
+        # this join method is MUCH cleaner than the while loop
+        # I had here earlier...
+        s = "".join(line)
+        yield 1, s
        
     def steps(self):
         
@@ -289,7 +292,7 @@ class BootstrapAWS(MRJob):
                     self.mr(self.duplicateOneliners, self.basicReducer),
                     self.mr(self.bootstrapReplicates, self.basicReducer),
                     self.mr(self.phyml, self.basicReducer)] 
-        
+                            
         if self.options.gene_trees == True:
             return [self.mr(self.phyml, self.basicReducer)]
             
