@@ -4,7 +4,7 @@ import sys
 
 def nexus2oneliner():
     
-    as_one_liner = True
+    as_one_liner = False
     
     in_data = False
     final_line = ''
@@ -16,7 +16,7 @@ def nexus2oneliner():
             if as_one_liner == True and len(final_line) != 0:
                 sys.stdout.write(final_line + ";")
             if as_one_liner == False and len(final_line) != 0:
-                sys.stdout.write(final_line + "\n")
+                sys.stdout.write(final_line + ";\n")
             final_line = ''
             align_count += 1
         
@@ -33,10 +33,8 @@ def nexus2oneliner():
                 else:
                     taxon = taxon[0].upper() + taxon[1:8]
                 if final_line == '':
-                    if as_one_liner == True:
-                        final_line = taxon +','+ seq
-                    else:
-                        final_line = str(align_count) + "\t"+ taxon +','+ seq
+                    final_line = taxon +','+ seq
+
                 else:
                     final_line += ',' + taxon +','+ seq
                         
@@ -46,6 +44,6 @@ def nexus2oneliner():
     if as_one_liner == True:
         sys.stdout.write(final_line + ";")
     else:
-        sys.stdout.write(final_line + "\n")
+        sys.stdout.write(final_line + ";\n")
             
 nexus2oneliner()
