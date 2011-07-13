@@ -249,8 +249,8 @@ class BootstrapAWS(MRJob):
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
         
         # PARSE FILE NAMES IN TMP/ TO GET MODEL
-        aic_dir_string = "tmp/%s.AIC-*tre*" % os.path.basename(temp_in.name)
-        aic_file = glob.glob("tmp/*AIC-*tre*")[0]
+        aic_dir_string = "tmp/%s.AICc-*tre*" % os.path.basename(temp_in.name)
+        aic_file = glob.glob("tmp/*AICc-*tre*")[0]
         aic_model = aic_file.split('.')[-2].split("-")[-1]  
         oneliner = "%s|%s" % (aic_model, alignment)
         
@@ -278,6 +278,12 @@ class BootstrapAWS(MRJob):
         concatenated_line = "".join(line)
         yield 1, concatenated_line
         
+    def lines2Genetrees(self, key, line):
+        """Convert multiple alignments with the same key
+        to a concatenated oneliner with the same key"""
+        for item in line:
+            yield key, line
+        
     def steps(self):
         
         if self.options.full_analysis == True:
@@ -287,7 +293,7 @@ class BootstrapAWS(MRJob):
                     self.mr(self.phyml, self.basicReducer)] 
                             
         if self.options.gene_trees == True:
-            return [self.mr(self.phyml, self.basicReducer)]
+            return [self.mr(self.mrAIC, self.lines2Genetrees)]
             
         # else:
         #     return [self.mr(self.makeReps, self.boot_reducer), 
