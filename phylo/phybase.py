@@ -264,13 +264,12 @@ def parseSortedBootreps(args):
         fin = open(args.input_file,'rU')
 
     for count, line in enumerate(fin):
-        if count == 0: continue
+        if count == 0 and os.path.splitext(args.input_file)[-1] == '.gz': continue # skip first line in gzip file
         bootrep, tree = line.split("\t")
         bootrep = int(bootrep)
         tree = cleanPhyMLTree(tree)
         if count == 1: 
             taxa = getTaxa(tree.strip())
-            print taxa
                 
         if line_id == None:
             line_id = bootrep
@@ -278,14 +277,13 @@ def parseSortedBootreps(args):
             continue
         
         if bootrep != line_id:
-            
             star_tree, steac_tree = phybase(trees, args.outgroup, taxa)
             
             print 'processed', len(trees), \
             'trees of bootstrap replicate', line_id
             
-            star_fout.write(star_tree.strip())
-            steac_fout.write(steac_tree.strip())
+            star_fout.write(star_tree.strip()+"\n")
+            steac_fout.write(steac_tree.strip()+"\n")
             
             steac_trees.append(steac_tree)
             star_trees.append(star_tree)

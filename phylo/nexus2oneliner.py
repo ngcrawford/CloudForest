@@ -2,6 +2,7 @@
 # encoding: utf-8
 import sys
 
+
 def nexus2oneliner():
     
     as_one_liner = False
@@ -45,5 +46,6 @@ def nexus2oneliner():
         sys.stdout.write(final_line + ";")
     else:
         sys.stdout.write(final_line + ";\n")
-            
+
+          
 nexus2oneliner()
