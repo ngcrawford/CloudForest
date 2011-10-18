@@ -30,6 +30,7 @@ import os
 import sys
 import gzip
 import glob
+from pylab import *
 import argparse
 import dendropy
 import rpy2.robjects as robjects
@@ -98,7 +99,7 @@ doi:10.1093/bioinformatics/btq062
         sys.exit()
 
     if args.genetrees == False and args.bootstraps == False and args.sorted == False and args.print_taxa == False:
-        print "You must select either --genetrees, --bootstraps, --sorted, or --print "
+        print "You must select either --genetrees, --bootstraps, --sorted, or --print-taxa"
         print "Type 'python phybase.py -h' for details" 
         sys.exit()
     
@@ -113,6 +114,55 @@ def cleanPhybaseTree(tree):
     tree.strip("\"")
     tree = tree.split("\"")
     return tree[1]
+
+def remove_branch_lengths(str_newick_tree):
+    tree = dendropy.Tree()
+    tree.read_from_string(str_newick_tree,'newick')
+    for nd in tree:
+        nd.label = None
+    tree = tree.as_newick_string()
+    return tree
+    
+    # para_pos = None
+    # in_para = False
+    # in_colon = False
+    # final_tree = ""
+    # slices = []
+    # for count, char in enumerate(str_newick_tree):
+    #     if char == ")":
+    #         para_pos = count + 1
+    #         in_para = True
+    #         in_colon = False
+    #     
+    #     if char == "(":
+    #         in_para = False
+    #             
+    #     if char == ":" and in_para == True and in_colon == False:
+    #         slices.append([para_pos, count])
+    #     
+    #     if char == ":":
+    #         in_colon = True  
+    # 
+    # final_tree = ''
+    # slices = array(slices)
+    # slices = slices.flatten()
+    # for count, item in enumerate(slices):
+    #     next_count = count + 1
+    #     if count == 0:
+    #         final_tree += (str_newick_tree[:item])
+    #     
+    #     if next_count + 1 > slices.shape[0]:
+    #         start = slices[count]
+    #         final_tree += str_newick_tree[item:]
+    #         break
+    #         
+    #     if count % 2 != 0:
+    #         start = slices[count]
+    #         stop = slices[next_count]          
+    #         final_tree += str_newick_tree[start:stop]
+    # 
+    # return final_tree
+                
 
 def branch_lengths_2_decimals(str_newick_tree):
     """replaces branch lengths in scientific notation with decimals"""
@@ -137,20 +187,21 @@ def branch_lengths_2_decimals(str_newick_tree):
 
         if colon_s == 0:
             new_tree += char
-    new_tree += ";"
+    new_tree = new_tree.strip('\'').strip('\"').strip('\'') + ";"
+           
     return new_tree
 
 def cleanPhyMLTree(tree):
     tree = tree.strip()
+    tree = remove_branch_lengths(tree)
     tree = dendropy.Tree.get_from_string(tree, 'newick') # removes support values (=total hack)
     tree = tree.as_newick_string()
     tree = branch_lengths_2_decimals(tree)    # converts numbers in sci. notation
-                                                    # to decimals (e.g., 1e-22 = 0.000000)
+                                              # to decimals (e.g., 1e-22 = 0.000000)
     return tree
     
 def phybase(trees, outgroup, all_taxa):
     """ generate Steac and Star trees from a list of trees. Requires Phybase and rpy2."""
-    
     robjects.r['library']('phybase')
     trees = robjects.StrVector(trees)
     species_taxaname = robjects.StrVector(all_taxa)
@@ -216,6 +267,7 @@ def parseBootreps(args):
     
     steac_trees = []
     star_trees = []
+    print 'starting bootreps'
     for count, key in enumerate(bootreps.keys()):
         trees = bootreps[key]
         star_tree, steac_tree = phybase(trees, args.outgroup, taxa)
@@ -263,14 +315,17 @@ def parseSortedBootreps(args):
     else:
         fin = open(args.input_file,'rU')
 
+    print 'processing bootreps'
     for count, line in enumerate(fin):
         if count == 0 and os.path.splitext(args.input_file)[-1] == '.gz': continue # skip first line in gzip file
         bootrep, tree = line.split("\t")
         bootrep = int(bootrep)
+        tree = tree.strip(";")
         tree = cleanPhyMLTree(tree)
+
         if count == 1: 
             taxa = getTaxa(tree.strip())
-                
+
         if line_id == None:
             line_id = bootrep
             trees.append(tree)
@@ -292,10 +347,20 @@ def parseSortedBootreps(args):
             trees = []
             
         trees.append(tree)
-       
+    
+    # Process final trees:
+    star_tree, steac_tree = phybase(trees, args.outgroup, taxa) 
+    print 'processed', len(trees), \
+    'trees of bootstrap replicate', line_id
+    
+    steac_trees.append(steac_tree)
+    star_trees.append(star_tree)
+    
+    # Clean up files 
     star_fout.close()
     steac_fout.close()
-          
+    
+    # WRITE CONSENSUS TREES
     steac_consensus = consensus(steac_trees)
     star_consensus = consensus(star_trees)
 
@@ -313,11 +378,23 @@ end;""" % (star_consensus, steac_consensus)
         
 def parseGenetrees(args):
     """docstring for parse"""
+    is_nexus = False
+    if args.input_file.endswith('.nex') == True or args.input_file.endswith('.nexus') == True:
+        is_nexus = True
+    
     fin = open(args.input_file,'rU')
     taxa = []
     trees = []
+
     for count, line in enumerate(fin):
-        tree = line.strip()
+        tree = 'tree'
+        if is_nexus == True:  # this doesn't work properly. 
+            if len(line.strip().split("=")) == 2:
+                tree = line.strip().split("=")[-1]
+                tree = tree.strip()
+            else: continue
+        else: tree = line.strip()
+        tree = tree.strip(";")
         tree = cleanPhyMLTree(tree)
         trees.append(tree)
         if count == 0: 
