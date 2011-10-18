@@ -229,6 +229,12 @@ class BootstrapAWS(MRJob):
             mpest_exe = 'mpestEC2'
         
         alignment = alignment.split("\t")[-1]     # weirdness parsing key, value
+        
+        # PARSE EXTRA ALIGNMENT INFO
+        name = None
+        if len(alignment.split("|")) == 2:
+            name, alignment = alignment.split("|")
+        
         phylip = self.oneliner2phylip(alignment)  # convert line to phylip
         
         # SETUP TEMPFILE
@@ -249,13 +255,21 @@ class BootstrapAWS(MRJob):
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
         
         # PARSE FILE NAMES IN TMP/ TO GET MODEL
-        aic_dir_string = "tmp/%s.AICc-*tre*" % os.path.basename(temp_in.name)
-        aic_file = glob.glob("tmp/*AICc-*tre*")[0]
+        aic_file = glob.glob("tmp/%s.AICc-*tre*" % os.path.basename(temp_in.name))[0]
         aic_model = aic_file.split('.')[-2].split("-")[-1]  
         oneliner = "%s|%s" % (aic_model, alignment)
         
-        yield 1, oneliner  # give everything the same key so it can be reduced to a 
-                           # 'oneliner' suitable for bootstrapping
+        if self.options.gene_trees == True:
+            aic_fin = open(aic_file,'r')
+            if name != None:
+                for line in aic_fin:
+                    yield 1, "tree '%s' = %s" % (name, line.strip())
+            else:
+                for line in aic_fin:
+                    yield 1, line.strip()
+        else:
+            yield 1, oneliner  # give everything the same key so it can be reduced to a 
+                               # 'oneliner' suitable for bootstrapping
       
     def duplicateOneliners(self, key, line):
         """Take lines and duplicate them the number of times
@@ -281,8 +295,7 @@ class BootstrapAWS(MRJob):
     def lines2Genetrees(self, key, line):
         """Convert multiple alignments with the same key
         to a concatenated oneliner with the same key"""
-        for item in line:
-            yield key, line
+        yield key, line
         
     def steps(self):
         
@@ -293,7 +306,7 @@ class BootstrapAWS(MRJob):
                     self.mr(self.phyml, self.basicReducer)] 
                             
         if self.options.gene_trees == True:
-            return [self.mr(self.mrAIC, self.lines2Genetrees)]
+            return [self.mr(self.mrAIC, reducer=None)]
             
         # else:
         #     return [self.mr(self.makeReps, self.boot_reducer), 
