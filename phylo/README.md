@@ -36,10 +36,8 @@ Bootstrapping Instructions:
 2.) Convert your phylip alignments to 'oneliners.' Essentially MapReduce operates one line at a time so you need to convert your alignments to a one line per alignment format. Actually, since you want to bootstrap the entire dataset you need to convert all your alignments into a single oneline format. The following command will do this for you:
 
         cat /phylip_folder/*.phylip | ./prep_aligns.py > oneliners.txt
-
+        
 3.) To submit the job to Amazon's Elastic MapReduce the following command will spin up 15 ec2 instances and generate 5 bootstrap replicates.
-
-
 
         python cloudtree.py \
         --bootreps 5 \
@@ -49,8 +47,8 @@ Bootstrapping Instructions:
 
         python cloudtree.py \
         -r emr \
-        --num-ec2-instances 5 \
-        --jobconf mapred.map.tasks=4 \
+        --num-ec2-instances 250 \
+        --jobconf mapred.map.tasks=249 \
         --jobconf mapred.reduce.tasks=1 \
         --jobconf mapred.reduce.tasks.speculative.execution=True \
         --full-analysis \
@@ -59,6 +57,10 @@ Bootstrapping Instructions:
         < practice_alignments/3.align.oneliners.txt \
         > step4.out
 
+4.) Run phybase.
+
+sort data
+pick out group (run --taxa command)
 
 
 
