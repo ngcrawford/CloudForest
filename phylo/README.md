@@ -5,17 +5,24 @@ blah blah blah... need to write a blerb for this.
 
 Basic Setup:
 ------------
+1.) Install [setuptools easy_install][2]
+1.) Install [Git][5]
 
-1.) Install mrjob. `$ easy_install mrjob` should do the trick. If you want to run the scripts locally you'll also need to install numpy.
+1.) Install [mrjob][3]. `$ easy_install mrjob` should do the trick. If you want to run the scripts locally you'll also need to install numpy. I recommend using [Enthought Python][4] for this, but you can also use `$ easy_install numpy`. 
 
-    I haven't written any unittests, but you can 'test' the 'alignments to oneliner scripts' with the following commands:
+1.) Clone this repository and cd to phylo folder.
 
-          $ python nexus2oneliner.py -i practice_alignments/nexus_primates/
-          $ python phylip2oneliner.py -i practice_alignments/phylip_primates/
+        git clone git@github.com:ngcrawford/BioAWS.git
+        cd BioAWS/phylo
 
-    Both commands should print out three long lines of DNA sequences without any error messages. 
+I haven't written any unittests, but you can 'test' the 'alignments to oneliner scripts' with the following commands in the phylo folder:
 
-2.) Follow the [instructions][1] for setting up mrjob. You'll need to make a mrjob.conf file. Mine looks something like this:
+        python nexus2oneliner.py -i practice_alignments/nexus_primates/
+        python phylip2oneliner.py -i practice_alignments/phylip_primates/
+
+Both commands should print out three long lines of DNA sequences without any error messages. 
+
+1.) Follow the [instructions][1] for setting up mrjob. You'll need to make a mrjob.conf file. Mine looks something like this:
     
         runners:
           emr:
@@ -30,7 +37,7 @@ Basic Setup:
            ssh_tunnel_is_open: true
            ssh_tunnel_to_job_tracker: true
 
-3.) Run the test analyses described below in the **Species Tree Estimation** and **Bootstrapping** sections
+1.) Run the test analyses described below in the **Species Tree Estimation** and **Bootstrapping** sections
 
    
 Species Tree Estimation:
@@ -89,9 +96,8 @@ Phybase:
 
 Instructions are unfinished.
 
-pick out-group (run --taxa command)
-run phybase...
-
-
 [1]: http://packages.python.org/mrjob/
-
+[2]: http://pypi.python.org/pypi/setuptools
+[3]: https://github.com/Yelp/mrjob
+[4]: http://www.enthought.com/products/epd.php
+[5]: http://help.github.com/mac-set-up-git/
