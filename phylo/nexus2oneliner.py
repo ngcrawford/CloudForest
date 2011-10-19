@@ -8,7 +8,7 @@ import argparse
 
 def get_args():
     """Parse sys.argv"""
-    parser = argparse.ArgumentParser(prog='Spec.py', description='Convert directory of Spec Files to CSV, interpolate nanometers, and smooth and plot data.')
+    parser = argparse.ArgumentParser()
     parser.add_argument('-i','--input-dir', required=True, help='The input directory containing the nexus files.')
     args = parser.parse_args()
     return args
