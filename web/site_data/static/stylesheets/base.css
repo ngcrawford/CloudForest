@@ -334,5 +334,13 @@
 	.remove-bottom { margin-bottom: 0 !important; }
 	.half-bottom { margin-bottom: 10px !important; }
 	.add-bottom { margin-bottom: 20px !important; }
-
-
+	.remove-top { margin-top: 0px; }
+	.form-comment, form-comment a { 
+		margin-bottom: 0px !important;
+		margin-top: 0px !important;
+		padding-left:190px; 
+		color: #999999; 
+		font-size: 11px;}
+	
+	.errors {color: #C11B17;}
+    
