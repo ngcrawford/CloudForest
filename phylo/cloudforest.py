@@ -52,6 +52,10 @@ class BootstrapAWS(MRJob):
         self.add_passthrough_option(
             '--full-analysis', action="store_true",
             help='Run full analysis')
+            
+        self.add_passthrough_option(
+            '--mraic', dest='mraic_opt', action='store_true',
+            help='Use MrAIC to calculate models')
     
     def oneliner2phylip(self, line):
         """Convert one-liner to phylip format."""
@@ -305,8 +309,11 @@ class BootstrapAWS(MRJob):
                     self.mr(self.bootstrapReplicates, self.basicReducer),
                     self.mr(self.phyml, self.basicReducer)] 
                             
-        if self.options.gene_trees == True:
+        if self.options.gene_trees == True and self.options.mraic_opt == True:
             return [self.mr(self.mrAIC, reducer=None)]
+
+        if self.options.gene_trees == True and self.options.mraic_opt == None:
+            return [self.mr(self.phyml, reducer=None)]
             
         # else:
         #     return [self.mr(self.makeReps, self.boot_reducer), 
