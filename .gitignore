@@ -1,5 +1,6 @@
 .Rhistory
 .DS_Store
+secret_data
 *.log
 *.tmproj
 *.old
