@@ -6,7 +6,6 @@ secret_data*
 *.old
 *.err
 *.out
-*.html
 *.pdf
 *.pyc
 *.tre*

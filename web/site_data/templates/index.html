@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<!--[if lt IE 7 ]><html class="ie ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]><html class="ie ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]><html class="ie ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--><html lang="en"> <!--<![endif]-->
+<head>
+
+	<!-- Basic Page Needs
+  ================================================== -->
+	<meta charset="utf-8">
+	<title>CloudForest</title>
+	<meta name="Make your trees on the cloud" content="">
+	<meta name="Nicholas Crawford" content="">
+	<!--[if lt IE 9]>
+		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Mobile Specific Metas
+  ================================================== -->
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<!-- CSS
+  ================================================== -->
+	<link rel="stylesheet" href="{{url_for('static', filename='stylesheets/base.css')}}">
+	<link rel="stylesheet" href="{{url_for('static', filename='stylesheets/skeleton.css')}}">
+	<link rel="stylesheet" href="{{url_for('static', filename='stylesheets/layout.css')}}">
+
+	<!-- Favicons
+	================================================== -->
+	<link rel="shortcut icon" href="{{url_for('static', filename='images/favicon.ico')}}">
+	<link rel="apple-touch-icon" href="{{url_for('static', filename='images/apple-touch-icon.png')}}">
+	<link rel="apple-touch-icon" sizes="72x72" href="{{url_for('static', filename='images/apple-touch-icon-72x72.png')}}">
+	<link rel="apple-touch-icon" sizes="114x114" href="{{url_for('static', filename='images/apple-touch-icon-114x114.png')}}">
+
+</head>
+<body>
+
+
+
+	<!-- Primary Page Layout
+	================================================== -->
+
+	<!-- Delete everything in this .container and get started on your own site! -->
+
+	<div class="container">
+        {# <div class="sixteen columns"> #}
+        {#  <h1 class="remove-bottom" style="margin-top: 40px">CloudForest</h1> #}
+        {#  <h5>Version 0.1 beta</h5> #}
+        {# </div> #}
+		
+		<ul class="tabs" style="margin-top: 40px">
+          <!-- Give href an ID value of corresponding "tabs-content" <li>'s -->
+          <li><a class="active" href="#Main">Main</a></li>
+          <li><a href="#Instructions">Instructions</a></li>
+          <li><a href="#Contact">Contact</a></li>
+        </ul>
+
+        <!-- Standard <ul> with class of "tabs-content" -->
+        <ul class="tabs-content">
+          <!-- Give ID that matches HREF of above anchors -->
+          <li class="active" id="Main">
+            <div class="eight columns">
+    			<h3>CloudForest</h3>
+    			<div class='subheader' style="margin-bottom: 20px;">Version 0.1 beta</div>
+    			<p>CloudForest generates phylogenetic trees on the cloud using MapReduce. 
+    			    CloudForest is designed to be run on 
+    			    <a href='http://aws.amazon.com/elasticmapreduce/'>Amazon's Elastic MapReduce</a> servers.
+    			    However, it is possible to run it on your own cluster or even on your local machine. 
+    			</p>
+		    </div>
+    		<div class="eight columns">
+    			<h3 class='offset-by-three' style="margin-bottom: 20px;">Setup Job</h3>
+                
+                <!-- Form Starts Here -->
+                <form action='' method="POST">
+                    <fieldset>
+                  
+                  {% if form.aws_id.errors %}
+                  <div class="row remove-bottom">
+    			  	   <div class='three columns offset-by-three'>
+    			  	   <ul class="errors">{% for error in form.aws_id.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    			  	   </div>
+    			  </div>
+				 {% endif %}
+                  
+                  <div class="row remove-bottom">
+                      <div class='three columns'>{{ form.aws_id.label }}</div>
+                      <div class='four columns'>{{ form.aws_id }}</div>
+                  </div>
+
+               	  {% if form.aws_secret_key.errors %}
+                  <div class="row remove-bottom">
+    			  	   <div class='three columns offset-by-three'>
+    			  	   <ul class="errors">{% for error in form.aws_secret_key.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    			  	   </div>
+    			  </div>
+				 {% endif %}
+
+                  <div class="row remove-bottom">
+                      <div class='three columns'>{{ form.aws_secret_key.label }}</div>
+                      <div class='four columns'>{{ form.aws_secret_key(style="margin-bottom:0px;") }}</div>
+                  </div>
+                               
+                  <div class='row'>
+                      <div class="form-comment">
+                          <a href='https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs'>Look it up</a>
+                      </div>
+                  </div>
+                                     
+                  {# <div class='row'> #}
+                  {#     <div class='form-comment'> #}
+                  {#         <a href='http://placeholder.link.com'>Check credentials...</a>  #}
+                  {#         {# get javascript from here: http://bio-cloud-1449786154.us-east-1.elb.amazonaws.com/cgi-bin/myrna.pl #}
+                  {#     </div> #}
+                  {# </div> #}
+                  
+                                    
+                  <div class="row remove-bottom">
+                      <div class='three columns remove-bottom'>{{ form.aws_region.label }}</div>
+                      <div class='four columns remove-bottom'>{{ form.aws_region  }}</div>
+                  </div>
+                     
+                  
+                  <div class='row'><hr></hr></div>
+                  
+                 {% if form.input_url.errors %}
+                  <div class="row remove-bottom">
+    			  	   <div class='three columns offset-by-three'>
+    			  	   <ul class="errors">{% for error in form.input_url.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    			  	   </div>
+    			  </div>
+				 {% endif %}
+				 
+                  <div class="row remove-bottom">
+                      <div class='three columns'>{{ form.input_url.label }}</div>
+                      <div class='four columns'>{{ form.input_url(value="s3://") }}</div>
+                  </div>
+                  
+                 {% if form.output_url.errors %}
+                  <div class="row remove-bottom">
+    			  	   <div class='three columns offset-by-three'>
+    			  	   <ul class="errors">{% for error in form.output_url.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    			  	   </div>
+    			  </div>
+				 {% endif %}
+                  
+                  <div class="row remove-bottom">
+                      <div class='three columns'>{{ form.output_url.label }}</div>
+                      <div class='four columns'>{{ form.output_url(value="s3://") }}</div>
+                  </div>
+                                      
+                  <div class='row'><hr></hr></div>
+                     
+                  <div class="row remove-bottom">
+                      <div class='three columns'>{{ form.job_name.label }}</div>
+                      <div class='four columns'>{{ form.job_name }}</div>
+                  </div>
+                  
+                  <div class="row remove-bottom">
+                      <div class='three columns'>{{ form.job_type.label }}</div>
+                      <div class='four columns'>{{ form.job_type }}</div>
+                  </div>
+                  
+                  <div class="row remove-bottom">
+                      <div class='three columns'>{{ form.ec2_instance_type.label }}</div>
+                      <div class='four columns'>{{ form.ec2_instance_type(style="margin-bottom: 0px;") }}</div>
+                  </div>
+                  
+                  <div class='row'>
+                      <div class='form-comment'>
+                          Currently only one option.
+                    </div>
+                  </div> 
+                  
+                  
+                  <div class="row">
+                      <div class='three columns'>{{ form.mraic.label }}</div>
+                      <div class='four columns'>{{ form.mraic }}</div>
+                  </div>
+
+				  <div class="row remove-bottom">
+                      <div class='three columns'>{{ form.bootstraps.label }}</div>
+                      <div class='four columns'>{{ form.bootstraps }}</div>
+                  </div>
+                  
+                  <div class='row'><hr></hr></div>
+                  
+				  <div class="row remove-bottom">
+                      <div class='three columns'>{{ form.map_tasks.label }}</div>
+                      <div class='four columns'>{{ form.map_tasks }}</div>
+                  </div>
+
+				  <div class="row remove-bottom">
+                      <div class='three columns'>{{ form.reduce_tasks.label }}</div>
+                      <div class='four columns'>{{ form.reduce_tasks }}</div>
+                  </div>
+                  
+                  <div class='row'><hr></hr></div>
+                                    
+                  <!-- Print Messages (e.g., Success) -->
+                  <div class='row'>
+                   {% with messages = get_flashed_messages() %}
+                     {% if messages %}
+                        <div class='offset-by-three'>
+                        <ul class=flashes>
+                        {% for message in messages %}
+                          <li>{{ message }}</li>
+                        {% endfor %}
+                        </ul>
+                        </div>
+                      {% endif %}
+                    {% endwith %}
+                  </div> 
+                                
+                  <div class="row">
+                      <div class='offset-by-three'><input type=submit></div>
+                  </div>
+                  </fieldset>
+                </form>
+    		</div>
+        </li>  {# end of Main Tab #}
+          
+          
+          
+          <li id="Instructions">The tabs are cross-browser, but don't need a ton of hacky CSS or markup.</li>
+
+          	
+          
+          <li id="Contact">
+          
+          	<div class="sixteen columns">
+          	
+          		CloudForest was designed and implemented by Nicholas G. Crawford. However, he received
+          		some help along the way. Brant Faircloth was instrumental in debugging and modifying
+          		MrAIC and PhyML so that they would behave appropriately in a MapReduce framework. Travis Glenn,
+          		John McCormack, Robb Brumfield all contributed ideas and suggestions.
+          	</div>  
+          	
+          	<div class="sixteen columns">
+          		<h5>Contact Details:</h5>
+          	</div>
+          	
+          	
+          	<div class="row">
+              <div class='one columns'><b>Email:</b></div>
+              <div class='four columns'>
+              <a href="mailto:ngcrawford@gmail.com?Subject=CloudForest">ngcrawford@gmail.com</a>
+              </div>
+          	</div>
+          	
+          	<div class="row">
+				<div class='one columns'><b>Website:</b></div>
+				<div class='four columns'>
+				<a href='www.ngcrawford.com'>www.ngcrawford.com</a>
+          	</div>          
+          
+          
+          </li>
+        </ul>
+		
+
+	</div><!-- container -->
+
+
+
+	<!-- JS
+	================================================== -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+	<script src="{{url_for('static', filename='javascripts/tabs.js')}}"></script>
+
+<!-- End Document
+================================================== -->
+</body>
+</html>
