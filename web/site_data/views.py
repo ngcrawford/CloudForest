@@ -1,5 +1,6 @@
 from site_data import app
-from flask import Flask, request, flash, redirect, url_for, render_template
+from secret_data import fake_form_data
+from flask import Flask, request, jsonify, flash, redirect, url_for, render_template
 from flaskext.wtf import Form, TextField, Required, BooleanField, SelectField,  RadioField, SubmitField, IntegerField, validators, ValidationError
 
 # app = Flask(__name__)
@@ -8,6 +9,9 @@ app.config.update(
     DEBUG=True,
     SECRET_KEY='...'
 )
+
+# Use to test code
+print fake_form_data
 
 class MyForm(Form):
 
@@ -29,20 +33,19 @@ class MyForm(Form):
 	map_tasks = IntegerField('Map Tasks', default=19)
 	reduce_tasks = IntegerField('Reduce Tasks', default=1)
 	bootstraps = IntegerField('Bootstrap Replicates', default=0)
+	ec2_instance_type = SelectField('EC2 Instance Type:', choices=[("small instance","m1.small")])
 	
+print fake_form_data
 
-	
-	
-	
 # if os.sys.platform == 'darwin':
 #   result_url = "/query_args"
 # else:
 #   result_url = "/ngcrawford/query_args"
 
-
 @app.route("/", methods=("GET", "POST"))
 def submit():
 	form = MyForm(request.form, csrf_enabled=False)
+	print fake_form_data
 	if form.validate_on_submit():
 	    print form.data
 
