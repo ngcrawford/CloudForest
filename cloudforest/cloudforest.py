@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses
 The author may be contacted at ngcrawford@gmail.com
 """
 
-
 import os
 import sys 
 sys.path.append('.')
@@ -36,10 +35,10 @@ from copy import copy, deepcopy
 from mrjob.job import MRJob
 from subprocess import Popen, PIPE
 
-class BootstrapAWS(MRJob):
+class ProcessPhyloData(MRJob):
     
     def configure_options(self):
-        super(BootstrapAWS, self).configure_options()
+        super(ProcessPhyloData, self).configure_options()
 
         self.add_passthrough_option(
             '--bootreps', dest='bootreps2run', default=None, type='int',
@@ -296,10 +295,10 @@ class BootstrapAWS(MRJob):
         concatenated_line = "".join(line)
         yield 1, concatenated_line
         
-    def lines2Genetrees(self, key, line):
-        """Convert multiple alignments with the same key
-        to a concatenated oneliner with the same key"""
-        yield key, line
+    # def lines2Genetrees(self, key, line):
+    #     """Convert multiple alignments with the same key
+    #     to a concatenated oneliner with the same key"""
+    #     yield key, line
         
     def steps(self):
         
