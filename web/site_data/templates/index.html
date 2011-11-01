@@ -9,8 +9,8 @@
   ================================================== -->
 	<meta charset="utf-8">
 	<title>CloudForest</title>
-	<meta name="Make your trees on the cloud" content="">
-	<meta name="Nicholas Crawford" content="">
+	<meta name="application-name" content="CloudForest">
+	<meta name="author" content="Nicholas Crawford">
 	<!--[if lt IE 9]>
 		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
 	<![endif]-->
@@ -93,7 +93,7 @@
                 jobs stuck on hung nodes to free nodes. </p>
                 
                  <p>The software available here will run analyses on AWS, your own
-                hadoop cluster, or on your local computer. To eases the submission
+                hadoop cluster, or on your local computer. To ease the submission
                 process to AWS we provide a webform that will automatically submit your
                 data to AWS for analysis.</p>
 
@@ -151,7 +151,7 @@
                   </div>
                      
                   
-                  <div class='row'><hr></hr></div>
+                  <div class='row'><hr></div>
                   
                  {% if form.input_url.errors %}
                   <div class="row remove-bottom">
@@ -179,7 +179,7 @@
                       <div class='four columns'>{{ form.output_url(value="s3://") }}</div>
                   </div>
                                       
-                  <div class='row'><hr></hr></div>
+                  <div class='row'><hr></div>
                      
                   <div class="row remove-bottom">
                       <div class='three columns'>{{ form.job_name.label }}</div>
@@ -213,7 +213,7 @@
                       <div class='four columns'>{{ form.bootstraps }}</div>
                   </div>
                   
-                  <div class='row'><hr></hr></div>
+                  <div class='row'><hr></div>
                   
 				  <div class="row remove-bottom">
                       <div class='three columns'>{{ form.map_tasks.label }}</div>
@@ -225,7 +225,7 @@
                       <div class='four columns'>{{ form.reduce_tasks }}</div>
                   </div>
                   
-                  <div class='row'><hr></hr></div>
+                  <div class='row'><hr></div>
                                     
                   <!-- Print Messages (e.g., Success) -->
                   <div class='row'>
@@ -250,37 +250,41 @@
     		</div>
         </li>  {# end of Main Tab #}
           
-          <li id="Instructions">The tabs are cross-browser, but don't need a ton of hacky CSS or markup.</li>
+          <li id="Instructions">
+            <div class="six columns">
+                These still need to be written. In all likelihood this will simply be a link to the PyPi repository 
+                and Sphinx documentation.
+            </div>
+          </li>
 
           	      
           <li id="Contact">
           
-          	<div class="sixteen columns">
+          	<div class="six columns">
           	
-          		CloudForest was designed and implemented by Nicholas G. Crawford. However, he received
-          		some help along the way. Brant Faircloth was instrumental in debugging and modifying
-          		MrAIC and PhyML so that they would behave appropriately in a MapReduce framework. Travis Glenn,
-          		John McCormack, Robb Brumfield all contributed ideas and suggestions.
+                <p>CloudForest was designed and implemented by <a href="www.ngcrawford.com">Nicholas Crawford</a>
+                with help from <a href="http://b.atcg.us/">Brant Faircloth</a>.</p>
+                
+                 <p><a href="travisg.myweb.uga.edu/Site/Welcome.html">Travis Glenn</a>, <a
+                href="http://faculty.oxy.edu/mccormack/">John McCormack</a>, <a
+                href="www.museum.lsu.edu/brumfield.html">Robb Brumfield</a> all contributed ideas and
+                suggestions.</p>
+                
+                 <h4>Contact Details:</h4>
+                
+                 <ul> 
+                     <li>Email: ngcrawford@gmail.com</li> 
+                     <li>Website: www.ngcrawford.com</li>
+                 </ul>
+                
+                 <h4>Support:</h4>
+                
+                 <p>This work was supported by an <a href="http://aws.amazon.com/education/">Amazon Education
+                Grant</a> and grants from <a href="http://www.nsf.gov/">NSF</a></p>
+                
+                 <img src="http://www.nsf.gov/pubs/1999/nsf99167/image8.gif" WIDTH=59 HEIGHT=59 alt="NSF" id="NSF" title="NSF" />
           	</div>  
-          	
-          	<div class="sixteen columns">
-          		<h5>Contact Details:</h5>
-          	</div>
-          	
-          	
-          	<div class="row">
-              <div class='one columns'><b>Email:</b></div>
-              <div class='four columns'>
-              <a href="mailto:ngcrawford@gmail.com?Subject=CloudForest">ngcrawford@gmail.com</a>
-              </div>
-          	</div>
-          	
-          	<div class="row">
-				<div class='one columns'><b>Website:</b></div>
-				<div class='four columns'>
-				<a href='www.ngcrawford.com'>www.ngcrawford.com</a>
-          	</div>          
-          
+          	          
           </li>
         </ul>
 		
