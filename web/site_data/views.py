@@ -24,6 +24,7 @@ class MyForm(Form):
         if field.data == "s3://":
             raise ValidationError(u'This field must be an S3 url.')
 
+    # Setup fields
     aws_id = TextField('AWS ID', validators=[Required()])
     aws_secret_key = TextField('AWS Secret Key', validators=[Required()])
     aws_region = SelectField('AWS Region', choices=[('us_east_1', 'US East'), ('us_west_1', 'US West')])
@@ -77,8 +78,8 @@ def submit():
     """Submits form data to cloudforest"""
     form = MyForm(request.form, csrf_enabled=False)
     if form.validate_on_submit(): 
-        # I think what we want to do here is spawn off the cloudforest run into it's 
-        # own subprocess. It sort of works..
+        # I think what we want to do here is spawn off the cloudforest into its 
+        # own subprocess. It sort of works for now.
         
         # ===========================
         #  COMMENT OUT LINES 88-90 UNLESS
