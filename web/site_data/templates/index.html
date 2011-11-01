@@ -35,8 +35,6 @@
 </head>
 <body>
 
-
-
 	<!-- Primary Page Layout
 	================================================== -->
 
@@ -62,14 +60,46 @@
             <div class="eight columns">
     			<h3>CloudForest</h3>
     			<div class='subheader' style="margin-bottom: 20px;">Version 0.1 beta</div>
-    			<p>CloudForest generates phylogenetic trees on the cloud using MapReduce. 
-    			    CloudForest is designed to be run on 
-    			    <a href='http://aws.amazon.com/elasticmapreduce/'>Amazon's Elastic MapReduce</a> servers.
-    			    However, it is possible to run it on your own cluster or even on your local machine. 
-    			</p>
+                <p>To infer phylogenies from thousands of DNA sequence alignments it is
+                becoming increasingly necessary to run the analyses on large computer
+                clusters. This is because measuring topology support requires running
+                bootstrap replicates. This quickly becomes far too computationally
+                expensive for a single machine. For example, a dataset consisting of
+                1,000 alignments would require 100,000 independent trees to be
+                inferred. Assuming it takes ~10 seconds per tree this works out to
+                115.7 days to run the analysis on a single machine. However, if the
+                analysis is spread across 20 processors this time is reduced to 5.8
+                days. If 250 processors are used, the whole analysis will run in 0.46
+                days (= 11.1 hours) an approximately 250 fold improvement in <a
+                href="http://en.wikipedia.org/wiki/Wall_clock_time">wall clock
+                time</a>.</p>
+                
+                 <p>Running analyses like this, however, are not without their own
+                unique problems: available computational resources at most academic
+                institutions and processor (node) failures, in particular, can be
+                limiting. To surmount the first issue we have written software that can
+                run on <a href="http://aws.amazon.com/elasticmapreduce/">Amazon&#8217;s
+                computer clusters</a> (i.e., AWS). Yes, that&#8217;s right, it&#8217;s
+                possible to create <a
+                href="http://arstechnica.com/business/news/2011/09/30000-core-cluster-built-on-amazon-ec2-cloud.ars">massive
+                computer clusters</a> using <a
+                href="http://aws.amazon.com/ec2/">Amazon&#8217;s cloud computing</a>
+                resources. Using AWS removes the cluster maintenance and setup and
+                allows the scientist to focus instead on the data production and post
+                analysis. To deal with processor failures, a common issue with large
+                multiprocessor analyses, we use a cluster running hadoop. The <a
+                href="http://wiki.apache.org/hadoop/ProjectDescription">hadoop
+                framework</a> automatically handles partial cluster failures and moves
+                jobs stuck on hung nodes to free nodes. </p>
+                
+                 <p>The software available here will run analyses on AWS, your own
+                hadoop cluster, or on your local computer. To eases the submission
+                process to AWS we provide a webform that will automatically submit your
+                data to AWS for analysis.</p>
+
 		    </div>
     		<div class="eight columns">
-    			<h3 class='offset-by-three' style="margin-bottom: 20px;">Setup Job</h3>
+    			<h3 class='offset-by-two' style="margin-bottom: 20px;">Submit Job to AWS</h3>
                 
                 <!-- Form Starts Here -->
                 <form action='' method="POST">
@@ -106,7 +136,7 @@
                           <a href='https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs'>Look it up</a>
                       </div>
                   </div>
-                                     
+                    
                   {# <div class='row'> #}
                   {#     <div class='form-comment'> #}
                   {#         <a href='http://placeholder.link.com'>Check credentials...</a>  #}
@@ -220,12 +250,9 @@
     		</div>
         </li>  {# end of Main Tab #}
           
-          
-          
           <li id="Instructions">The tabs are cross-browser, but don't need a ton of hacky CSS or markup.</li>
 
-          	
-          
+          	      
           <li id="Contact">
           
           	<div class="sixteen columns">
@@ -253,7 +280,6 @@
 				<div class='four columns'>
 				<a href='www.ngcrawford.com'>www.ngcrawford.com</a>
           	</div>          
-          
           
           </li>
         </ul>
