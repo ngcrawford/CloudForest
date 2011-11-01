@@ -1,0 +1,12 @@
+To infer phylogenies from thousands of DNA sequence alignments it is becoming increasingly necessary to run the analyses on large computer clusters. This is because measuring topology support requires running bootstrap replicates. This quickly becomes far too computationally expensive for a single machine. For example, a dataset consisting of 1,000 alignments would require 100,000 independent trees to be inferred. Assuming it takes ~10 seconds per tree this works out to 115.7 days to run the analysis on a single machine. However, if the analysis is spread across 20 processors this time is reduced to 5.8 days. If 250 processors are used, the whole analysis will run in 0.46 days (= 11.1 hours) an approximately 250 fold improvement in [wall clock time][4].
+
+Running analyses like this, however, are not without their own unique problems: available computational resources at most academic institutions and processor (node) failures, in particular, can be limiting. To surmount the first issue we have written software that can run on [Amazon's computer clusters][1] (i.e., AWS). Yes, that's right, it's possible to create [massive computer clusters][2] using [Amazon's cloud computing][3] resources. Using AWS removes the cluster maintenance and setup and allows the scientist to focus instead on the data production and post analysis. To deal with processor failures, a common issue with large multiprocessor analyses, we use a cluster running hadoop. The [hadoop framework][5] automatically handles partial cluster failures and moves jobs stuck on hung nodes to free nodes. 
+
+The software available here will run analyses on AWS, your own hadoop cluster, or on your local computer. To eases the submission process to AWS we provide a webform that will automatically submit your data to AWS for analysis.
+
+
+[1]: http://aws.amazon.com/elasticmapreduce/
+[2]: http://arstechnica.com/business/news/2011/09/30000-core-cluster-built-on-amazon-ec2-cloud.ars
+[3]: http://aws.amazon.com/ec2/
+[4]: http://en.wikipedia.org/wiki/Wall_clock_time
+[5]: http://wiki.apache.org/hadoop/ProjectDescription
