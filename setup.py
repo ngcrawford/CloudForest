@@ -24,7 +24,10 @@ setup(
             'cloudforest':[
                 'bin/*',
                 'gzips/*',
-                'test/alignments/*'
+                'test/alignments/*.oneliners',
+                'test/alignments/*.phylip',
+                'test/alignments/nexus_primates/*',
+                'test/alignments/phylip_primates/*'`
             ]
         },
     include_package_data = True,
