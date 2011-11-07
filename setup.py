@@ -6,11 +6,10 @@ setup(
     author='Nicholas G. Crawford',
     author_email='ngcrawford@gmail.com',
     packages=['cloudforest', 'cloudforest.test'], # Not tests written yet...
-    scripts=['bin/stowe-towels.py','bin/wash-towels.py'],
     url='http://pypi.python.org/pypi/CloudForest/',
     license='LICENSE.txt',
     description='Generate gene and species trees from thousands of loci using Map-Reduce.',
-    long_description=open('README.txt').read(),
+    long_description=open('README.rst').read(),
     install_requires=[
         "mrjob >= 0.2.8",
         "flask >= 0.8",
