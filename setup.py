@@ -18,19 +18,13 @@ setup(
     packages=[
             'cloudforest',
             'cloudforest.test',
-            'cloudforest.test.alignments',
-            'cloudforest.test.alignments.nexus_primates',
-            'cloudforest.test.alignments.phylip_primates',
             ],
     package_data = {
             '':['*.txt'],
             'cloudforest':[
                 'bin/*',
                 'gzips/*',
-                'test/*',
-                'test/alignments/*',
-                'test/alignments/nexus_primates/*',
-                'test/alignments/phylip_primates/*',
+                'test/alignments/*'
             ]
         },
     include_package_data = True,
