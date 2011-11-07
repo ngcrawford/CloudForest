@@ -5,7 +5,6 @@ setup(
     version='0.0.1',
     author='Nicholas G. Crawford',
     author_email='ngcrawford@gmail.com',
-    packages=['cloudforest', 'cloudforest.test'], # Not tests written yet...
     url='http://pypi.python.org/pypi/CloudForest/',
     license='LICENSE.txt',
     description='Generate gene and species trees from thousands of loci using Map-Reduce.',
@@ -16,6 +15,13 @@ setup(
         "flask-wtf >= 0.5.2",
         "numpy >= 1.6.1"
     ],
+    packages=[
+            'cloudforest',
+            'cloudforest.test',
+            'cloudforest.test.alignments',
+            'cloudforest.test.alignments.nexus_primates',
+            'cloudforest.test.alignments.phylip_primates',
+            ],
     package_data = {
             '':['*.txt'],
             'cloudforest':[
