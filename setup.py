@@ -16,4 +16,13 @@ setup(
         "flask-wtf >= 0.5.2",
         "numpy >= 1.6.1"
     ],
+    package_data = {
+            '':['*.txt'],
+            'cloudforest':[
+                'bin/*',
+                'gzips/*',
+                'test/*'
+            ]
+        },
+    include_package_data = True,
 )
