@@ -1,4 +1,6 @@
-from distutils.core import setup
+import distribute_setup
+distribute_setup.use_setuptools()
+from setuptools import setup
 
 setup(
     name='CloudForest',
