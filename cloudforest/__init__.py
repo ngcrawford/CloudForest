@@ -31,7 +31,7 @@ from pkg_resources import resource_listdir
 class ProcessPhyloData(MRJob):
     
     def __init__(self):
-        self.cwd = resource_listdir
+        self.cwd = resource_listdir()
         self.binaries = os.path.join(self.cwd, 'binaries')
     
     def configure_options(self):
