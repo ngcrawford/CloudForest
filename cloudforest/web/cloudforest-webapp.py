@@ -1,43 +1,18 @@
-from site_data import app
-# from secret_data import fake_form_data
-from flask import Flask, request, jsonify, flash, redirect, url_for, render_template
-from flaskext.wtf import Form, TextField, Required, BooleanField, SelectField,  RadioField, SubmitField, IntegerField, validators, ValidationError
-
-from CloudForest.cloudforest import cloudforest
 from multiprocessing import Process
 
+from flask import Flask, request, jsonify, redirect, url_for, render_template
 
-# app = Flask(__name__)
+from cloudforest import cloudforest
+from forms import MyForm
+
+app = Flask(__name__)
+app.config.from_object(__name__)
 
 app.config.update(
     DEBUG=True,
     SECRET_KEY='...'
 )
 
-
-class MyForm(Form):
-    """ Create cloudforest form"""
-    
-    def validate_S3_url(form, field):
-        """Checks that field is a valid S3 url.
-            Needs improvement. :) """
-        if field.data == "s3://":
-            raise ValidationError(u'This field must be an S3 url.')
-
-    # Setup fields
-    aws_id = TextField('AWS ID', validators=[Required()])
-    aws_secret_key = TextField('AWS Secret Key', validators=[Required()])
-    aws_region = SelectField('AWS Region', choices=[('us_east_1', 'US East'), ('us_west_1', 'US West')])
-    input_url = TextField('Input Url', validators=[Required(), validate_S3_url])
-    output_url = TextField('Output Url', validators=[Required(), validate_S3_url])
-    job_name = TextField('Job Name', default="CloudForest", validators=[Required()])
-    job_type = SelectField('Job Type', choices=[('genetrees', 'Gene Trees'), ('bootstraps','Bootstraps')])
-    mraic = BooleanField('Use MrAIC to infer models',default=False)
-    map_tasks = IntegerField('Map Tasks', default=19)
-    reduce_tasks = IntegerField('Reduce Tasks', default=1)
-    bootstraps = IntegerField('Bootstrap Replicates', default=0)
-    ec2_instance_type = SelectField('EC2 Instance Type:', choices=[("m1.small","m1.small")])
-    
 def run_cloudforest(form_options):
     """Take form options and inject them into cloudforest"""
     cf_options = ['-r', 'emr', '--no-conf', \
@@ -72,7 +47,6 @@ def run_cloudforest(form_options):
     #         key, value = mr_job.parse_output_line(line)
     #         print key, value
 
-
 @app.route("/", methods=("GET", "POST"))
 def submit():
     """Submits form data to cloudforest"""
@@ -80,23 +54,19 @@ def submit():
     if form.validate_on_submit(): 
         # I think what we want to do here is spawn off the cloudforest into its 
         # own subprocess. It sort of works for now.
-        
+
         # ===========================
         #  COMMENT OUT LINES 88-90 UNLESS
         #  YOU WANT TO INSTALL A BUNCH
         #  OF PYTHON SCIENTIFIC DEPENDANCIES
-        
+
         p = Process(target=run_cloudforest(form.data))
         p.start()
         p.join()
-        
+
         pass # don't comment out the pass or the if statement becomes invalid
-        
+
     return render_template("index.html",form=form)
 
-
-
-
-
-
-    
+if __name__ == '__main__':
+    app.run()
