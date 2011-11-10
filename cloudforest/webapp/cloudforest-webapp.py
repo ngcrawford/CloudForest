@@ -1,9 +1,7 @@
-from multiprocessing import Process
-
-from flask import Flask, request, jsonify, redirect, url_for, render_template
-
-from cloudforest import cloudforest
+import cloudforest
 from forms import MyForm
+from multiprocessing import Process
+from flask import Flask, request, jsonify, redirect, url_for, render_template
 
 app = Flask(__name__)
 app.config.from_object(__name__)
