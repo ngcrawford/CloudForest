@@ -250,7 +250,7 @@ class ProcessPhyloData(MRJob):
         
         # EXECUTE MR-AIC (AIC output only)
         cli = "%s --infile=%s --output_dir=%s >/dev/null 2>&1" % \
-            (os.path.join(self.binaries, 'mraic_mod.pl') temp_in.name, temp_dir)
+            (os.path.join(self.binaries, 'mraic_mod.pl'), temp_in.name, temp_dir)
         cli_parts = cli.split()
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
         
