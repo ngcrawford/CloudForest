@@ -17,9 +17,7 @@ __email__ = 'ngcrawford _at_ gmail *dot* com'
 __status__ = 'testing'
 
 import os
-import sys 
-sys.path.append('.')
-sys.path.append('bin')
+import sys
 import glob
 import tempfile
 import platform
@@ -28,8 +26,13 @@ import numpy as np
 from copy import copy, deepcopy
 from mrjob.job import MRJob
 from subprocess import Popen, PIPE
+from pkg_resources import resource_listdir
 
 class ProcessPhyloData(MRJob):
+    
+    def __init__(self):
+        self.cwd = resource_listdir
+        self.binaries = os.path.join(self.cwd, 'binaries')
     
     def configure_options(self):
         super(ProcessPhyloData, self).configure_options()
@@ -200,8 +203,8 @@ class ProcessPhyloData(MRJob):
         temp_in.seek(0)     # move pointer to beginning of file
              
         # RUN PHYML
-        cli = '%s/%s/./%s --input=%s --model=%s >/dev/null 2>&1' % (os.getcwd(),\
-                'bin', phyml_exe, temp_in.name, model) 
+        cli = '%s --input=%s --model=%s >/dev/null 2>&1' % \
+            (os.path.join(self.binaries, phyml_exe), temp_in.name, model) 
         cli_parts = cli.split()
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
         
@@ -246,8 +249,8 @@ class ProcessPhyloData(MRJob):
         temp_dir = os.path.dirname(temp_in.name)
         
         # EXECUTE MR-AIC (AIC output only)
-        cli = "%s/%s/./mraic_mod.pl --infile=%s --output_dir=%s >/dev/null 2>&1" % \
-            (os.getcwd(), 'bin', temp_in.name, temp_dir)
+        cli = "%s --infile=%s --output_dir=%s >/dev/null 2>&1" % \
+            (os.path.join(self.binaries, 'mraic_mod.pl') temp_in.name, temp_dir)
         cli_parts = cli.split()
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
         
