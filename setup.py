@@ -24,8 +24,6 @@ setup(
     package_data = {
             '':['*.txt'],
             'cloudforest':[
-                'bin/*',
-                'gzips/*',
                 'test/alignments/*.oneliners',
                 'test/alignments/*.phylip',
                 'test/alignments/nexus_primates/*',
