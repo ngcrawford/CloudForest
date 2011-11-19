@@ -20,6 +20,7 @@ setup(
     packages=[
             'cloudforest',
             'cloudforest.test',
+            'cloudforest.webapp',
             ],
     package_data = {
             '':['*.txt'],
