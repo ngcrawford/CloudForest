@@ -29,7 +29,9 @@ setup(
                 'test/alignments/*.phylip',
                 'test/alignments/nexus_primates/*',
                 'test/alignments/phylip_primates/*',
-                'webapp/static/*',
+                'webapp/static/images/*',
+                'webapp/static/javascripts/*',
+                'webapp/static/stylesheets/*',
                 'webapp/templates/*'
             ]
         },
