@@ -3,10 +3,10 @@ from forms import MyForm
 from multiprocessing import Process
 from flask import Flask, request, render_template
 
-app = Flask(__name__)
-app.config.from_object(__name__)
+application = Flask(__name__)
+application.config.from_object(__name__)
 
-app.config.update(
+application.config.update(
     DEBUG=True,
     SECRET_KEY='...'
 )
@@ -24,16 +24,16 @@ def run_cloudforest(form_options):
                 '--archive', 's3://bioaws/mapreduce/exes/aws.phylo.tar.gz#bin',]
     
     if form_options['mraic'] != None:
-        cf_options.append("--mraic")
+        cf_options.applicationend("--mraic")
     
     if form_options['job_type'] == 'genetrees':
-        cf_options.append("--gene-trees")
+        cf_options.applicationend("--gene-trees")
     
     if form_options['bootstraps'] != 0:
-        cf_options.append("--bootstraps")
-        cf_options.append(form_options['bootstraps'])
+        cf_options.applicationend("--bootstraps")
+        cf_options.applicationend(form_options['bootstraps'])
         
-    cf_options.append(form_options['input_url'])
+    cf_options.applicationend(form_options['input_url'])
     
     mr_job = cloudforest.ProcessPhyloData()
     mr_job.load_options(cf_options)
@@ -45,7 +45,7 @@ def run_cloudforest(form_options):
     #         key, value = mr_job.parse_output_line(line)
     #         print key, value
 
-@app.route("/", methods=("GET", "POST"))
+@application.route("/", methods=("GET", "POST"))
 def submit():
     """Submits form data to cloudforest"""
     form = MyForm(request.form, csrf_enabled=False)
@@ -67,4 +67,4 @@ def submit():
     return render_template("index.html",form=form)
 
 if __name__ == '__main__':
-    app.run()
+    application.run()
