@@ -29,6 +29,8 @@ setup(
                 'test/alignments/*.phylip',
                 'test/alignments/nexus_primates/*',
                 'test/alignments/phylip_primates/*',
+                'webapp/static/*',
+                'webapp/templates/*'
             ]
         },
     include_package_data = True,
