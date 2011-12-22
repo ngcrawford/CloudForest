@@ -35,6 +35,8 @@
 </head>
 <body>
 
+
+
 	<!-- Primary Page Layout
 	================================================== -->
 
@@ -45,19 +47,23 @@
         {#  <h1 class="remove-bottom" style="margin-top: 40px">CloudForest</h1> #}
         {#  <h5>Version 0.1 beta</h5> #}
         {# </div> #}
-		
-		<ul class="tabs" style="margin-top: 40px">
-          <!-- Give href an ID value of corresponding "tabs-content" <li>'s -->
-          <li><a class="active" href="#Main">Main</a></li>
-          <li><a href="#Instructions">Instructions</a></li>
-          <li><a href="#Contact">Contact</a></li>
-        </ul>
-
+        <div class='sixteen columns' id='header_image'>
+            <img src="{{url_for('static', filename='images/cloudforest_header_v2.gif')}}"/>
+        </div>
+		<div class='sixteen columns remove-bottom' id='tab_select'>
+    		<ul class="tabs">
+              <!-- Give href an ID value of corresponding "tabs-content" <li>'s -->
+              <li><a class="active" href="#Main">Main</a></li>
+              <li><a href="#Instructions">Instructions</a></li>
+              <li><a href="#Contact">Contact</a></li>
+            </ul>
+        </div>
+        
         <!-- Standard <ul> with class of "tabs-content" -->
         <ul class="tabs-content">
           <!-- Give ID that matches HREF of above anchors -->
           <li class="active" id="Main">
-            <div class="eight columns">
+            <div class="eight columns" style="margin-top: 20px;">
     			<h3>CloudForest</h3>
     			<div class='subheader' style="margin-bottom: 20px;">Version 0.1 beta</div>
                 <p>To infer phylogenies from thousands of DNA sequence alignments it is
@@ -98,8 +104,8 @@
                 data to AWS for analysis.</p>
 
 		    </div>
-    		<div class="eight columns">
-    			<h3 class='offset-by-two' style="margin-bottom: 20px;">Submit Job to AWS</h3>
+    		<div class="eight columns" style="margin-top: 20px;">
+    			<h3 class='offset-by-two' style="margin-bottom: 40px;">Submit Job to AWS</h3>
                 
                 <!-- Form Starts Here -->
                 <form action='' method="POST">
@@ -151,7 +157,7 @@
                   </div>
                      
                   
-                  <div class='row'><hr></div>
+                  <div class='row offset-by-two' style="padding-right: 48px;"><hr></div>
                   
                  {% if form.input_url.errors %}
                   <div class="row remove-bottom">
@@ -179,7 +185,7 @@
                       <div class='four columns'>{{ form.output_url(value="s3://") }}</div>
                   </div>
                                       
-                  <div class='row'><hr></div>
+                  <div class='row offset-by-two' style="padding-right: 48px;"><hr></div>
                      
                   <div class="row remove-bottom">
                       <div class='three columns'>{{ form.job_name.label }}</div>
@@ -213,7 +219,7 @@
                       <div class='four columns'>{{ form.bootstraps }}</div>
                   </div>
                   
-                  <div class='row'><hr></div>
+                  <div class='row offset-by-two' style="padding-right: 48px;"><hr></div>
                   
 				  <div class="row remove-bottom">
                       <div class='three columns'>{{ form.map_tasks.label }}</div>
@@ -225,7 +231,7 @@
                       <div class='four columns'>{{ form.reduce_tasks }}</div>
                   </div>
                   
-                  <div class='row'><hr></div>
+                  <div class='row offset-by-two' style="padding-right: 48px;"><hr></div>
                                     
                   <!-- Print Messages (e.g., Success) -->
                   <div class='row'>
@@ -248,6 +254,9 @@
                   </fieldset>
                 </form>
     		</div>
+    	<div class="sixteen columns"><hr></div>
+    	    
+    		
         </li>  {# end of Main Tab #}
           
           <li id="Instructions">
