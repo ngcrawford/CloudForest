@@ -36,7 +36,7 @@ from mrjob.job import MRJob
 from subprocess import Popen, PIPE
 
 class ProcessPhyloData(MRJob):
-    
+        
     def configure_options(self):
         super(ProcessPhyloData, self).configure_options()
 
@@ -154,11 +154,11 @@ class ProcessPhyloData(MRJob):
         Rather that producing all the bootstrap replicates in one process, it takes a file
         of duplicated datasets equal to the number of replicates. One boostrap replicate is
         produced from the loci within each dataset, and one bootstap replicate is made on
-        each locus of the bootstrapped loci. This speeds up the MapReduce algorithm because
+        each locus of the bootstrapped loci. This speeds up the MapReduce algorithm 
         by parallelizing the bootstrapping opperation.
         
-        This fuction also keeps the appropriate model of molecular evolution with each
-        locus.
+        This fuction also keeps the appropriate model of molecular evolution associated 
+        with each locus.
         """
         
         loci = line.strip().split(';')
@@ -175,7 +175,23 @@ class ProcessPhyloData(MRJob):
                 oneliner = "%s|%s" % (model, locus)
                 yield key, oneliner
     
+    def makeTreeName(self, args_dict):
+        """Converts dictionary of arguement into a sorted string with the
+        format:  """
+        name = ""
+        for pair in sorted(args_dict.items()):
+            pair = [str(pair[0]), str(pair[1])]
+            name += ':'.join(pair) + ","
+
+        return "'" + name.strip(",") + "'"
     
+    def processStatsFile(self, fin):
+        lnL = None
+        for line in fin:
+            if 'Log-likelihood' in line:
+                lnL = line.split()[-1]
+        return lnL
+        
     def phyml(self, key, line):
         """Run PhyML on each line in the input file. 
         Parses out evolutionary model if it provided as first word in file
@@ -192,10 +208,20 @@ class ProcessPhyloData(MRJob):
         if len(line.split("\t")) == 2:
             key, line = line.split("\t")
         
-        model = 'HKY85'                     # set default model
-        if "|" in line:
-            model, line = line.split("|")   # use provided model otherwise default is HKY85  
-        phylip = self.oneliner2phylip(line) # convert line to phylip
+        # GET MODEL INFO FROM FILE IF AVAILABLE
+        args_dict = {}
+        args_dict['model'] = 'HKY85'                     # set default model
+        if ":" in line:
+            args, align = line.split(":")
+            args = args.split(',')
+            for item in args:
+                dict_key, value = item.split("=")
+                args_dict[dict_key] = value
+
+            phylip = self.oneliner2phylip(align) # convert line to phylip
+        
+        else:
+            phylip = self.oneliner2phylip(line) # convert line to phylip
         
         # SETUP TEMP FILE
         if system == "OSX_setup" and os.path.exists('tmp/') != True:
@@ -207,16 +233,28 @@ class ProcessPhyloData(MRJob):
              
         # RUN PHYML
         cli = '%s/%s/./%s --input=%s --model=%s >/dev/null 2>&1' % (os.getcwd(),\
-                'bin', phyml_exe, temp_in.name, model) 
+                'bin', phyml_exe, temp_in.name, args_dict['model']) 
+        #yield key, cli
         cli_parts = cli.split()
+        #yield key, cli_parts
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
         
-        # EXTRACT RESULTS
+        # EXTRACT RESULTS AND FORMAT AS NEXUS TREES
         temp_string = os.path.split(temp_in.name)[1].split('.')[0]
-        treefile =  os.path.join('tmp','%s.out_phyml_tree.txt' % (temp_string))
-        newick = open(treefile,'r').readlines()[0].strip()
         
-        yield key, newick
+        treefile =  os.path.join('tmp','%s.out_phyml_tree.txt' % (temp_string))
+        tree = open(treefile,'r').readlines()[0].strip().strip("\"")
+        
+        statsfile = os.path.join('tmp','%s.out_phyml_stats.txt' % (temp_string))        
+        lnL = self.processStatsFile(open(statsfile,'r'))
+        args_dict['lnL'] = lnL
+        
+        if self.options.gene_trees == True and self.options.mraic_opt == None:
+            tree = "tree " + self.makeTreeName(args_dict) + " = [&U] " + tree
+            yield key, tree
+        
+        else:
+            yield key, tree
     
     def mrAIC(self, key, alignment):
         """ Run mr-aic.pl on the each one-liner in the input file."""
@@ -226,6 +264,7 @@ class ProcessPhyloData(MRJob):
             system = 'OSX_setup'
             phyml_exe = 'PhyML3OSX'
             mpest_exe = 'mpestOSX'
+        
         else:
             system = 'AWS_setup'
             phyml_exe = 'PhyML3linux32'
@@ -243,7 +282,6 @@ class ProcessPhyloData(MRJob):
         # SETUP TEMPFILE
         if system == "OSX_setup" and os.path.exists('tmp/') != True:
             os.mkdir('tmp/')
-            
         temp_in = tempfile.NamedTemporaryFile(suffix='.out', dir='tmp/')
         for line in phylip:
             temp_in.write(line)
@@ -294,12 +332,7 @@ class ProcessPhyloData(MRJob):
         to a concatenated oneliner with the same key"""
         concatenated_line = "".join(line)
         yield 1, concatenated_line
-        
-    # def lines2Genetrees(self, key, line):
-    #     """Convert multiple alignments with the same key
-    #     to a concatenated oneliner with the same key"""
-    #     yield key, line
-        
+                
     def steps(self):
         
         if self.options.full_analysis == True:
