@@ -11,15 +11,11 @@ from subprocess import Popen, PIPE
 from pkg_resources import resource_listdir
 
 class ProcessPhyloData(MRJob):
-<<<<<<< HEAD:cloudforest/cloudforest.py
-        
-=======
     
     def __init__(self):
         self.cwd = resource_listdir()
         self.binaries = os.path.join(self.cwd, 'binaries')
     
->>>>>>> refs/remotes/origin/bcf-working:cloudforest/process.py
     def configure_options(self):
         super(ProcessPhyloData, self).configure_options()
 
@@ -222,13 +218,9 @@ class ProcessPhyloData(MRJob):
         temp_in.seek(0)     # move pointer to beginning of file
              
         # RUN PHYML
-<<<<<<< HEAD:cloudforest/cloudforest.py
-        cli = '%s/%s/./%s --input=%s --model=%s >/dev/null 2>&1' % (os.getcwd(),\
-                'bin', phyml_exe, temp_in.name, args_dict['model']) 
-=======
         cli = '%s --input=%s --model=%s >/dev/null 2>&1' % \
-            (os.path.join(self.binaries, phyml_exe), temp_in.name, model) 
->>>>>>> refs/remotes/origin/bcf-working:cloudforest/process.py
+            (os.path.join(self.binaries, phyml_exe), temp_in.name, args_dict['model']) 
+            
         cli_parts = cli.split()
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
 
@@ -271,14 +263,10 @@ class ProcessPhyloData(MRJob):
         temp_dir = os.path.dirname(temp_in.name)
         
         # EXECUTE MR-AIC (AIC output only)
-<<<<<<< HEAD:cloudforest/cloudforest.py
-        cli = "%s/%s/./mraic_mod.pl --infile=%s --output_dir=%s >/dev/null 2>&1" % \
-            (os.getcwd(), 'bin', temp_in.name, temp_dir)
-        
-=======
+
         cli = "%s --infile=%s --output_dir=%s >/dev/null 2>&1" % \
             (os.path.join(self.binaries, 'mraic_mod.pl'), temp_in.name, temp_dir)
->>>>>>> refs/remotes/origin/bcf-working:cloudforest/process.py
+        
         cli_parts = cli.split()
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
         
@@ -335,3 +323,6 @@ class ProcessPhyloData(MRJob):
         # else:
         #     return [self.mr(self.makeReps, self.boot_reducer), 
         #             self.mr(self.phyml, self.boot_reducer),]
+
+if __name__ == '__main__':
+    ProcessPhyloData.run()
