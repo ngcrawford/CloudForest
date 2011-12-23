@@ -1,16 +1,28 @@
 How it works:
 -------------
 
-blah blah blah... need to write a blerb for this. 
+1. This first line reads in a directory of nexus files files and emits oneliners. 
 
-Basic Setup:
-------------
-1.) Install [setuptools easy_install][2]
-1.) Install [Git][5]
+		`python nexus2oneliner.py -i test/alignments/nexus_primates/`
+	
+2. Then step one piped directly into `cloudforest.py` with the pipe symbol (= '|').
 
-1.) Install [mrjob][3]. `$ easy_install mrjob` should do the trick. If you want to run the scripts locally you'll also need to install numpy. I recommend using [Enthought Python][4] for this, but you can also use `$ easy_install numpy`. 
+		python nexus2oneliner.py -i test/alignments/nexus_primates/ | 
+		python cloudforest.py ...
 
-1.) Clone this repository and cd to phylo folder.
+3. Cloudforest has two main functions. You can use it to infer genetrees by setting the `--gene-trees` flag or you can use it to bootstrap your data as described in [CITE] by setting the `--bootreps=#` flag. With the default setting cloudforest calculates  `--mraic`
+
+
+Basic Installation:
+------------------
+
+1. Install [setuptools easy_install][2]
+
+1. Install [Git][5]
+
+1. Install [mrjob][3]. `$ easy_install mrjob` should do the trick. If you want to run the scripts locally you'll also need to install numpy. I recommend using [Enthought Python][4] for this, but you can also use `$ easy_install numpy`. 
+
+1. Clone this repository and cd to phylo folder.
 
         git clone git@github.com:ngcrawford/BioAWS.git
         cd BioAWS/phylo
@@ -22,7 +34,7 @@ I haven't written any unittests, but you can 'test' the 'alignments to oneliner 
 
 Both commands should print out three long lines of DNA sequences without any error messages. 
 
-1.) Follow the [instructions][1] for setting up mrjob. You'll need to make a mrjob.conf file. Mine looks something like this:
+1. Follow the [instructions][1] for setting up mrjob. You'll need to make a mrjob.conf file. Mine looks something like this:
     
         runners:
           emr:
@@ -37,59 +49,94 @@ Both commands should print out three long lines of DNA sequences without any err
            ssh_tunnel_is_open: true
            ssh_tunnel_to_job_tracker: true
 
-1.) Run the test analyses described below in the **Species Tree Estimation** and **Bootstrapping** sections
+1. Run the test analyses described below in the **Species Tree Estimation** and **Bootstrapping** sections
 
    
 Species Tree Estimation:
 ------------------------
 
-Here's the command to run it locally with the practice data:
+This first command will run cloudforest locally with the practice data. Setting `--protocol=raw_value` removes 'null' keys from the final file. `--setup-cmd 'mkdir -p tmp'` creates the appropriate `tmp/` directory for storing the phyml output files. This setting is only necessary for running local jobs. `tmp/` is present by default in on Amazon Elastic MapReduce Clusters. 
 
-        python nexus2oneliner.py -i practice_alignments/nexus_primates/ |
-        python cloudtree.py \
-        --gene-trees \
-        --archive=osx.phylo.tar.gz#bin \
-        > primate.gene.trees \
+
+		python nexus2oneliner.py -i test/alignments/nexus_primates/ | 
+		python cloudforest.py \
+		--protocol=raw_value \
+		--setup-cmd 'mkdir -p tmp' \
+		--gene-trees \
+		--archive=gzips/osx.phylo.tar.gz#bin \
+		> primate.gene.trees
+		
+		
+Setting the `--mraic` flag will makes cloudforest.py use mraic to infer the appropriate evolutionary model. 		
+
+		python nexus2oneliner.py -i test/alignments/nexus_primates/ |
+		python cloudforest.py  \
+		--setup-cmd 'mkdir -p tmp' \
+		--gene-trees \
+		--mraic \
+		--archive=gzips/osx.phylo.tar.gz#bin \
+		> primate.gene.trees
+
 
 And, this will run it on Amazon:
 
-        python nexus2oneliner.py -i practice_alignments/nexus_primates/ |
-        python cloudtree.py \
+        python nexus2oneliner.py -i test/alignments/nexus_primates/|
+        python cloudforest.py \
         --num-ec2-instances 2 \
         --jobconf mapred.map.tasks=1 \
         --jobconf mapred.reduce.tasks=1 \
         --jobconf mapred.reduce.tasks.speculative.execution=True \
+		--protocol=raw_value \
         --gene-trees \
-        --archive=aws.phylo.tar.gz#bin \
+        --archive=gzips/aws.phylo.tar.gz#bin \
         > primate.aws.gene.trees \
 
 Real life example:
 
-    The main things of note here are the extra map tasks and the extended timeout settings. The latter are particularly important if you have longish alignments such as those from exons and/or are using MrAIC to infer models.
+    The main things of note here are the extra map tasks and the extended timeout settings. 
+	The latter are particularly important if you have longish alignments such as those from
+	exons and/or are using MrAIC to infer models.
 
-        python nexus2oneliner.py -i some/real/data/nexus |
-        python cloudtree.py \
-        -r emr \
-        --num-ec2-instances 250 \
-        --jobconf mapred.map.tasks=249 \
-        --jobconf mapred.reduce.tasks=1 \
-        --jobconf mapred.reduce.tasks.speculative.execution=True \
-        --jobconf mapred.task.timeout=18000000 \
-        --full-analysis \
-        --bootreps 1000 \
-        --archive=aws.phylo.tar.gz#bin \
-        > genecode-merged.1000-bootreps.trees
+		python nexus2oneliner.py -i some/real/data/nexus |
+		python cloudforest.py \
+		-r emr \
+		--num-ec2-instances 250 \
+		--jobconf mapred.map.tasks=249 \
+		--jobconf mapred.reduce.tasks=1 \
+		--jobconf mapred.reduce.tasks.speculative.execution=True \
+		--jobconf mapred.task.timeout=18000000 \
+		--gene-trees \
+		--archive=gzips/aws.phylo.tar.gz#bin \
+		> lotsa.gene.trees
         
 Bootstrapping:
 -------------
 
 Here's the command to run it locally with the practice data:
 
-        python nexus2oneliner.py -i practice_alignments/nexus_primates/ |
-        python cloudtree.py \
-        --bootreps 5 \
-        --archive=osx.phylo.tar.gz#bin \
-        > primates.5_bootreps.trees \
+		python nexus2oneliner.py -i test/alignments/nexus_primates/ |
+		python cloudforest.py \
+		--setup-cmd 'mkdir -p tmp' \
+		--full-analysis \
+		--bootreps 5 \
+		--archive=gzips/osx.phylo.tar.gz#bin  \
+		> primates.5bootreps.trees 
+
+And, this will run it on Amazon:
+
+		python nexus2oneliner.py -i test/alignments/nexus_primates/ |
+		python cloudforest.py \
+		-r emr \
+		--num-ec2-instances 2 \
+		--jobconf mapred.map.tasks=1 \
+		--jobconf mapred.reduce.tasks=1 \
+		--jobconf mapred.reduce.tasks.speculative.execution=True \
+		--jobconf mapred.task.timeout=18000000 \
+		--full-analysis \
+		--bootreps 5 \
+		--archive=gzips/osx.phylo.tar.gz#bin  \
+		> primates.5bootreps.aws.trees 
+
 
 Phybase:
 --------
