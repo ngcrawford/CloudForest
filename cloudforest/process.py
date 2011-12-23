@@ -1,31 +1,5 @@
-#!/usr/bin/env python
-# encoding: utf-8
-"""
-bootstrap.py
-
-Created by Nick Crawford on 2010-12-23.
-Copyright (c) 2010
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses
-
-The author may be contacted at ngcrawford@gmail.com
-"""
-
 import os
-import sys 
-sys.path.append('.')
-sys.path.append('bin')
+import sys
 import glob
 import tempfile
 import platform
@@ -34,9 +8,18 @@ import numpy as np
 from copy import copy, deepcopy
 from mrjob.job import MRJob
 from subprocess import Popen, PIPE
+from pkg_resources import resource_listdir
 
 class ProcessPhyloData(MRJob):
+<<<<<<< HEAD:cloudforest/cloudforest.py
         
+=======
+    
+    def __init__(self):
+        self.cwd = resource_listdir()
+        self.binaries = os.path.join(self.cwd, 'binaries')
+    
+>>>>>>> refs/remotes/origin/bcf-working:cloudforest/process.py
     def configure_options(self):
         super(ProcessPhyloData, self).configure_options()
 
@@ -239,8 +222,13 @@ class ProcessPhyloData(MRJob):
         temp_in.seek(0)     # move pointer to beginning of file
              
         # RUN PHYML
+<<<<<<< HEAD:cloudforest/cloudforest.py
         cli = '%s/%s/./%s --input=%s --model=%s >/dev/null 2>&1' % (os.getcwd(),\
                 'bin', phyml_exe, temp_in.name, args_dict['model']) 
+=======
+        cli = '%s --input=%s --model=%s >/dev/null 2>&1' % \
+            (os.path.join(self.binaries, phyml_exe), temp_in.name, model) 
+>>>>>>> refs/remotes/origin/bcf-working:cloudforest/process.py
         cli_parts = cli.split()
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
 
@@ -283,9 +271,14 @@ class ProcessPhyloData(MRJob):
         temp_dir = os.path.dirname(temp_in.name)
         
         # EXECUTE MR-AIC (AIC output only)
+<<<<<<< HEAD:cloudforest/cloudforest.py
         cli = "%s/%s/./mraic_mod.pl --infile=%s --output_dir=%s >/dev/null 2>&1" % \
             (os.getcwd(), 'bin', temp_in.name, temp_dir)
         
+=======
+        cli = "%s --infile=%s --output_dir=%s >/dev/null 2>&1" % \
+            (os.path.join(self.binaries, 'mraic_mod.pl'), temp_in.name, temp_dir)
+>>>>>>> refs/remotes/origin/bcf-working:cloudforest/process.py
         cli_parts = cli.split()
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
         
@@ -342,7 +335,3 @@ class ProcessPhyloData(MRJob):
         # else:
         #     return [self.mr(self.makeReps, self.boot_reducer), 
         #             self.mr(self.phyml, self.boot_reducer),]
-    
-
-if __name__ == '__main__':
-    ProcessPhyloData.run()

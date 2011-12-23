@@ -1,5 +1,5 @@
 import unittest
-from CloudForest.cloudforest import cloudforest
+import cloudforest
 
 class TestCloudForestFunctions(unittest.TestCase):
 
