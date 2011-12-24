@@ -52,9 +52,9 @@
 /* #Basic Styles
 ================================================== */
 	body {
-		background: #fff;
-		font: 14px/21px "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-		color: #444;
+		background-color: #EDFAAF;
+		font: 16px/23px "Helvetica", "Helvetica", Helvetica, Arial, sans-serif;
+		color: #201f74;
 		-webkit-font-smoothing: antialiased; /* Fix for webkit rendering */
 		-webkit-text-size-adjust: 100%;
  }
@@ -63,8 +63,8 @@
 /* #Typography
 ================================================== */
 	h1, h2, h3, h4, h5, h6 {
-		color: #181818;
-		font-family: "Georgia", "Times New Roman", Helvetica, Arial, sans-serif;
+		color: #852E83;
+		font-family: "Helvetica", "Helvetica", Helvetica, Arial, sans-serif;
 		font-weight: normal; }
 	h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { font-weight: inherit; }
 	h1 { font-size: 46px; line-height: 50px; margin-bottom: 14px;}
@@ -92,7 +92,7 @@
 	blockquote cite:before { content: "\2014 \0020"; }
 	blockquote cite a, blockquote cite a:visited, blockquote cite a:visited { color: #555; }
 
-	hr { border: solid #ddd; border-width: 1px 0 0; clear: both; margin: 10px 0 30px; height: 0; }
+	hr { border: solid #201f74; border-width: 2px 0 0; clear: both; margin: 10px 0 30px; height: 0; }
 
 
 /* #Links
@@ -206,9 +206,9 @@
 ================================================== */
 	ul.tabs {
 		display: block;
-		margin: 0 0 20px 0;
+		margin: 0 0 0 0;
 		padding: 0;
-		border-bottom: solid 1px #ddd; }
+		/*border-bottom: solid 1px #ddd;*/}
 	ul.tabs li {
 		display: block;
 		width: auto;
@@ -220,40 +220,40 @@
 		display: block;
 		text-decoration: none;
 		width: auto;
-		height: 29px;
+		height: 30px;
 		padding: 0px 20px;
 		line-height: 30px;
-		border: solid 1px #ddd;
-		border-width: 1px 1px 0 0;
+		/*border: solid 2px #ddd;*/
+		/*border-width: 2px 2px 2px 0;*/
 		margin: 0;
-		background: #f5f5f5;
+		background: #39B54A;
 		font-size: 13px; }
-	ul.tabs li a.active {
-		background: #fff;
-		height: 30px;
-		position: relative;
-		top: -4px;
-		padding-top: 4px;
-		border-left-width: 1px;
-		margin: 0 0 0 -1px;
-		color: #111;
-		-moz-border-radius-topleft: 2px;
-		-webkit-border-top-left-radius: 2px;
-		border-top-left-radius: 2px;
-		-moz-border-radius-topright: 2px;
-		-webkit-border-top-right-radius: 2px;
-		border-top-right-radius: 2px; }
+/*  ul.tabs li a.active {
+        background: #fff;
+        height: 29px;
+        position: relative;
+        top: -4px;
+        padding-top: 4px;
+        border-left-width: 1px;
+        margin: 0 0 0 -1px;
+        color: #111;
+        -moz-border-radius-topleft: 2px;
+        -webkit-border-top-left-radius: 2px;
+        border-top-left-radius: 2px;
+        -moz-border-radius-topright: 2px;
+        -webkit-border-top-right-radius: 2px;
+        border-top-right-radius: 2px; }*/
 	ul.tabs li:first-child a.active {
 		margin-left: 0; }
-	ul.tabs li:first-child a {
-		border-width: 1px 1px 0 1px;
-		-moz-border-radius-topleft: 2px;
-		-webkit-border-top-left-radius: 2px;
-		border-top-left-radius: 2px; }
-	ul.tabs li:last-child a {
-		-moz-border-radius-topright: 2px;
-		-webkit-border-top-right-radius: 2px;
-		border-top-right-radius: 2px; }
+/*  ul.tabs li:first-child a {
+        border-width: 2px 2px 2px 2px;
+        -moz-border-radius-topleft: 2px;
+        -webkit-border-top-left-radius: 2px;
+        border-top-left-radius: 2px; }
+    ul.tabs li:last-child a {
+        -moz-border-radius-topright: 2px;
+        -webkit-border-top-right-radius: 2px;
+        border-top-right-radius: 2px; }*/
 
 	ul.tabs-content { margin: 0; display: block; }
 	ul.tabs-content > li { display:none; }
@@ -331,7 +331,7 @@
 
 /* #Misc
 ================================================== */
-	.remove-bottom { margin-bottom: 0 !important; }
+	.remove-bottom { margin-bottom: 0px !important; }
 	.half-bottom { margin-bottom: 10px !important; }
 	.add-bottom { margin-bottom: 20px !important; }
 	.remove-top { margin-top: 0px; }
@@ -341,6 +341,13 @@
 		padding-left:190px; 
 		color: #999999; 
 		font-size: 11px;}
-	
 	.errors {color: #C11B17;}
-    
+    #header_image img {
+	    max-width: 100%;
+	    vertical-align:text-bottom;}
+	#tab_select {
+	    border: 1px solid #ccc;
+	    background-color: #39B54A
+	}
+	
+

@@ -1,31 +1,5 @@
-#!/usr/bin/env python
-# encoding: utf-8
-"""
-bootstrap.py
-
-Created by Nick Crawford on 2010-12-23.
-Copyright (c) 2010
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses
-
-The author may be contacted at ngcrawford@gmail.com
-"""
-
 import os
-import sys 
-sys.path.append('.')
-sys.path.append('bin')
+import sys
 import glob
 import tempfile
 import platform
@@ -34,8 +8,13 @@ import numpy as np
 from copy import copy, deepcopy
 from mrjob.job import MRJob
 from subprocess import Popen, PIPE
+from pkg_resources import resource_listdir
 
 class ProcessPhyloData(MRJob):
+    
+    def __init__(self):
+        self.cwd = resource_listdir()
+        self.binaries = os.path.join(self.cwd, 'binaries')
     
     def configure_options(self):
         super(ProcessPhyloData, self).configure_options()
@@ -99,7 +78,6 @@ class ProcessPhyloData(MRJob):
         bootstrap_replicates = []
         for boot_rep_num in range(start,start+replicates):
             choices = np.random.random_integers(0, sample_size-1, sample_size)  # generate index array of random choices
-
             if type(sample) == list:
                 boot_rep = []
                 for choice in choices:
@@ -139,14 +117,15 @@ class ProcessPhyloData(MRJob):
         loci = line.strip().split(';')            
         loci = loci[:-1]                                                    # remove empty cell due to trailing ";" 
         bootstapped_loci = bootstrap(loci, self.options.bootreps2run, 1)    # first bootstrap the loci
-        for bcount, bootrep in enumerate(bootstapped_loci):                 
-            for lcount, locus in enumerate(bootrep):
-                taxa, numpy_alignment = onelinerAlignment2Array(locus)      # convert loci to 2d arrays
-                bases_by_col = np.column_stack(numpy_alignment)             # transpose so columns are bootstapped   
-                shuffled = bootstrap(bases_by_col, 1, 0)                    # generate one replicate of bootstrapped columns
-                shuffled = np.column_stack(shuffled[0])                     # tranpose back to rows of sequences
-                oneliner = array2OnelinerAlignment(taxa, shuffled)          # back to oneliner
-                yield bcount, oneliner
+        yield key, bootstapped_loci
+        # for bcount, bootrep in enumerate(bootstapped_loci):                 
+        #     for lcount, locus in enumerate(bootrep):
+        #         taxa, numpy_alignment = onelinerAlignment2Array(locus)      # convert loci to 2d arrays
+        #         bases_by_col = np.column_stack(numpy_alignment)             # transpose so columns are bootstapped   
+        #         shuffled = bootstrap(bases_by_col, 1, 0)                    # generate one replicate of bootstrapped columns
+        #         shuffled = np.column_stack(shuffled[0])                     # tranpose back to rows of sequences
+        #         oneliner = array2OnelinerAlignment(taxa, shuffled)          # back to oneliner
+        #         yield bcount, oneliner
     
     def bootstrapReplicates(self, key, line):
         """ This fuction is slightly different than the standard bootstrapping fuction:
@@ -154,11 +133,11 @@ class ProcessPhyloData(MRJob):
         Rather that producing all the bootstrap replicates in one process, it takes a file
         of duplicated datasets equal to the number of replicates. One boostrap replicate is
         produced from the loci within each dataset, and one bootstap replicate is made on
-        each locus of the bootstrapped loci. This speeds up the MapReduce algorithm because
+        each locus of the bootstrapped loci. This speeds up the MapReduce algorithm 
         by parallelizing the bootstrapping opperation.
         
-        This fuction also keeps the appropriate model of molecular evolution with each
-        locus.
+        This fuction also keeps the appropriate model of molecular evolution associated 
+        with each locus.
         """
         
         loci = line.strip().split(';')
@@ -166,16 +145,46 @@ class ProcessPhyloData(MRJob):
         bootstapped_loci = self.bootstrap(loci, 1, 0)    # first bootstrap the loci
         for bcount, bootrep in enumerate(bootstapped_loci):                 
             for lcount, locus in enumerate(bootrep):
-                model, locus = locus.split("|")
+                args_dict = {}
+                args_dict['model'] = 'HKY85'
+                args_dict = self.processOnelinerData(locus, args_dict)          # overwrite model
+                model = args_dict['model']
+                model, locus = locus.split(":")
                 taxa, numpy_alignment = self.onelinerAlignment2Array(locus)     # convert loci to 2d arrays
                 bases_by_col = np.column_stack(numpy_alignment)                 # transpose so columns are bootstapped   
                 shuffled = self.bootstrap(bases_by_col, 1, 0)                   # generate one replicate of bootstrapped columns
-                shuffled = np.column_stack(shuffled[0])                         # tranpose back to rows of sequences
+                shuffled = np.column_stack(shuffled[0])                         # transpose back to rows of sequences
                 oneliner = self.array2OnelinerAlignment(taxa, shuffled)         # back to oneliner
-                oneliner = "%s|%s" % (model, locus)
+                oneliner = "%s:%s" % (self.makeTreeName(args_dict), oneliner)
                 yield key, oneliner
     
+    def makeTreeName(self, args_dict):
+        """Converts dictionary of arguement into a sorted string with the
+        format:  """
+        name = ""
+        for pair in sorted(args_dict.items()):
+            pair = [str(pair[0]), str(pair[1])]
+            name += '='.join(pair) + ","
+
+        return "" + name.strip(",") + ""
     
+    def processStatsFile(self, fin):
+        lnL = None
+        for line in fin:
+            if 'Log-likelihood' in line:
+                lnL = line.split()[-1]
+        return lnL
+        
+    def processOnelinerData(self, line, args_dict):
+        args, align = line.split(":")
+        args = args.split(',')
+        for item in args:
+            dict_key, value = item.split("=")
+            args_dict[dict_key] = value
+        
+        return args_dict
+
+        
     def phyml(self, key, line):
         """Run PhyML on each line in the input file. 
         Parses out evolutionary model if it provided as first word in file
@@ -192,58 +201,60 @@ class ProcessPhyloData(MRJob):
         if len(line.split("\t")) == 2:
             key, line = line.split("\t")
         
-        model = 'HKY85'                     # set default model
-        if "|" in line:
-            model, line = line.split("|")   # use provided model otherwise default is HKY85  
-        phylip = self.oneliner2phylip(line) # convert line to phylip
+        # GET MODEL INFO FROM FILE IF AVAILABLE
+        args_dict = {}
+        args_dict['model'] = 'HKY85'                     # set default model
+        if ":" in line:
+            args_dict = self.processOnelinerData(line, args_dict)
+            phylip = self.oneliner2phylip(line.split(":")[-1]) # convert line to phylip
+        
+        else:
+            phylip = self.oneliner2phylip(line) # convert line to phylip
         
         # SETUP TEMP FILE
-        if system == "OSX_setup" and os.path.exists('tmp/') != True:
-            os.mkdir('tmp/')
         temp_in = tempfile.NamedTemporaryFile(suffix='.out', dir='tmp/')
         for line in phylip:
             temp_in.write(line)
         temp_in.seek(0)     # move pointer to beginning of file
              
         # RUN PHYML
-        cli = '%s/%s/./%s --input=%s --model=%s >/dev/null 2>&1' % (os.getcwd(),\
-                'bin', phyml_exe, temp_in.name, model) 
+        cli = '%s --input=%s --model=%s >/dev/null 2>&1' % \
+            (os.path.join(self.binaries, phyml_exe), temp_in.name, args_dict['model']) 
+            
         cli_parts = cli.split()
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
-        
-        # EXTRACT RESULTS
+
+        # EXTRACT RESULTS AND FORMAT AS NEXUS TREES
         temp_string = os.path.split(temp_in.name)[1].split('.')[0]
+        
         treefile =  os.path.join('tmp','%s.out_phyml_tree.txt' % (temp_string))
-        newick = open(treefile,'r').readlines()[0].strip()
+        tree = open(treefile,'r').readlines()[0].strip().strip("\"")
         
-        yield key, newick
-    
-    def mrAIC(self, key, alignment):
-        """ Run mr-aic.pl on the each one-liner in the input file."""
+        statsfile = os.path.join('tmp','%s.out_phyml_stats.txt' % (temp_string))        
+        lnL = self.processStatsFile(open(statsfile,'r'))
+        args_dict['lnL'] = lnL
         
-        # USE CORRECT BINARYS
-        if platform.system() == 'Darwin':
-            system = 'OSX_setup'
-            phyml_exe = 'PhyML3OSX'
-            mpest_exe = 'mpestOSX'
+        if self.options.gene_trees == True and self.options.mraic_opt == None:
+            tree = "tree '" + self.makeTreeName(args_dict) + "' = [&U] " + tree
+            yield key, tree
+        
         else:
-            system = 'AWS_setup'
-            phyml_exe = 'PhyML3linux32'
-            mpest_exe = 'mpestEC2'
-        
-        alignment = alignment.split("\t")[-1]     # weirdness parsing key, value
+            yield key, tree
+    
+    def mrAIC(self, key, line):
+        """ Run mr-aic.pl on the each one-liner in the input file."""
+                
+        oneliner = line.split("\t")[-1]     # weirdness parsing key, value
         
         # PARSE EXTRA ALIGNMENT INFO
-        name = None
-        if len(alignment.split("|")) == 2:
-            name, alignment = alignment.split("|")
+        args_dict = {}
+        if ":" in line:
+            args_dict = self.processOnelinerData(oneliner, args_dict)
+            phylip = self.oneliner2phylip(oneliner.split(":")[-1]) # convert line to phylip
         
-        phylip = self.oneliner2phylip(alignment)  # convert line to phylip
-        
-        # SETUP TEMPFILE
-        if system == "OSX_setup" and os.path.exists('tmp/') != True:
-            os.mkdir('tmp/')
-            
+        else:        
+            phylip = self.oneliner2phylip(oneliner)  # convert line to phylip
+                
         temp_in = tempfile.NamedTemporaryFile(suffix='.out', dir='tmp/')
         for line in phylip:
             temp_in.write(line)
@@ -252,24 +263,24 @@ class ProcessPhyloData(MRJob):
         temp_dir = os.path.dirname(temp_in.name)
         
         # EXECUTE MR-AIC (AIC output only)
-        cli = "%s/%s/./mraic_mod.pl --infile=%s --output_dir=%s >/dev/null 2>&1" % \
-            (os.getcwd(), 'bin', temp_in.name, temp_dir)
+
+        cli = "%s --infile=%s --output_dir=%s >/dev/null 2>&1" % \
+            (os.path.join(self.binaries, 'mraic_mod.pl'), temp_in.name, temp_dir)
+        
         cli_parts = cli.split()
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
         
         # PARSE FILE NAMES IN TMP/ TO GET MODEL
+
         aic_file = glob.glob("tmp/%s.AICc-*tre*" % os.path.basename(temp_in.name))[0]
-        aic_model = aic_file.split('.')[-2].split("-")[-1]  
-        oneliner = "%s|%s" % (aic_model, alignment)
+        aic_model = aic_file.split('.')[-2].split("-")[-1]
+        args_dict['model'] = aic_model
+        oneliner = "%s:%s" % (self.makeTreeName(args_dict), oneliner.split(":")[-1])
         
         if self.options.gene_trees == True:
-            aic_fin = open(aic_file,'r')
-            if name != None:
-                for line in aic_fin:
-                    yield 1, "tree '%s' = %s" % (name, line.strip())
-            else:
-                for line in aic_fin:
-                    yield 1, line.strip()
+            aic_fin = open(aic_file,'rU')
+            for line in aic_fin:
+                yield key, "tree '%s' = [&U] %s" % (self.makeTreeName(args_dict), line.strip())
         else:
             yield 1, oneliner  # give everything the same key so it can be reduced to a 
                                # 'oneliner' suitable for bootstrapping
@@ -294,12 +305,7 @@ class ProcessPhyloData(MRJob):
         to a concatenated oneliner with the same key"""
         concatenated_line = "".join(line)
         yield 1, concatenated_line
-        
-    # def lines2Genetrees(self, key, line):
-    #     """Convert multiple alignments with the same key
-    #     to a concatenated oneliner with the same key"""
-    #     yield key, line
-        
+                
     def steps(self):
         
         if self.options.full_analysis == True:
@@ -317,7 +323,6 @@ class ProcessPhyloData(MRJob):
         # else:
         #     return [self.mr(self.makeReps, self.boot_reducer), 
         #             self.mr(self.phyml, self.boot_reducer),]
-    
 
 if __name__ == '__main__':
     ProcessPhyloData.run()

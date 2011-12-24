@@ -80,7 +80,7 @@ def nexus2oneliner(fin, name=None):
     if as_one_liner == True:
         sys.stdout.write(final_line + ";")
     else:
-        sys.stdout.write(name + "|" + final_line + ";\n")
+        sys.stdout.write("chrm=" + name + ":" + final_line + ";\n")
 
 def processNexusFiles():
     args = get_args()
