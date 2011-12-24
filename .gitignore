@@ -16,3 +16,4 @@ aws_config/
 real_data/
 *phyml_stats.txt
 *phyml_tree.txt
+CloudForest.egg-info
