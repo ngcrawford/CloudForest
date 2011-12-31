@@ -27,12 +27,14 @@ Future directions:
 """
 
 import os
+import re
 import sys
 import gzip
 import glob
 from pylab import *
 import argparse
 import dendropy
+import textwrap
 import rpy2.robjects as robjects
 
 def interface():
@@ -243,6 +245,10 @@ def consensus(tree_list, min_freq=0.5):
 
 def getTaxa(tree):
     t = dendropy.Tree()
+
+    if "=" in tree:
+        tree = tree.split('=')[-1].strip()
+
     t.read_from_string(tree, 'newick', preserve_underscores=True)
     taxa = t.taxon_set.labels()
     return taxa
@@ -281,10 +287,12 @@ def parseBootreps(args):
     star_consensus = consensus(star_trees)
 
     template =  """#NEXUS\n
-begin trees;\n
-tree 'STARConsensus' = %s\n
-tree 'STEACConsensus' = %s\n
-end;\n""" % (star_consensus, steac_consensus)
+                    begin trees;\n
+                    tree 'STARConsensus' = %s\n
+                    tree 'STEACConsensus' = %s\n
+                    end;\n""" % (star_consensus, steac_consensus)
+
+    template = textwrap.dedent(template)
 
     steac_star_cons_out = os.path.splitext(args.input_file)[0]
     steac_star_cons_out = os.path.join(steac_star_cons_out,'steac_star.consensus.trees')
@@ -394,6 +402,11 @@ def parseGenetrees(args):
                 tree = tree.strip()
             else: continue
         else: tree = line.strip()
+        
+        if "=" in tree:
+            tree = tree.split('=')[-1].strip()
+            tree = re.sub("\d+Ptero", 'Ptero', tree) # HOT FIX for ptero issue REMOVE!
+        
         tree = tree.strip(";")
         tree = cleanPhyMLTree(tree)
         trees.append(tree)
@@ -403,6 +416,7 @@ def parseGenetrees(args):
                 print args.outgroup, 'not in taxa:', taxa
                 sys.exit() 
 
+    print trees
     star_tree, steac_tree = phybase(trees, args.outgroup, taxa)
 
     template =  """#NEXUS
