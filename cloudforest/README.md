@@ -70,7 +70,7 @@ This first command will run cloudforest locally with the practice data. Setting 
 Setting the `--mraic` flag will makes cloudforest.py use mraic to infer the appropriate evolutionary model. 		
 
 		python nexus2oneliner.py -i test/alignments/nexus_primates/ |
-		python cloudforest.py  \
+		python process.py  \
 		--setup-cmd 'mkdir -p tmp' \
 		--gene-trees \
 		--mraic \
