@@ -3,7 +3,7 @@ How it works:
 
 1. This first line reads in a directory of nexus files files and emits oneliners. 
 
-		`python nexus2oneliner.py -i test/alignments/nexus_primates/`
+		python nexus2oneliner.py -i test/alignments/nexus_primates/
 	
 2. Then step one piped directly into `cloudforest.py` with the pipe symbol (= '|').
 
@@ -63,32 +63,32 @@ This first command will run cloudforest locally with the practice data. Setting 
 		--protocol=raw_value \
 		--setup-cmd 'mkdir -p tmp' \
 		--gene-trees \
-		--archive=gzips/osx.phylo.tar.gz#bin \
+		--archive=../gzips/osx.phylo.tar.gz#bin \
 		> primate.gene.trees
 		
 		
 Setting the `--mraic` flag will makes cloudforest.py use mraic to infer the appropriate evolutionary model. 		
 
 		python nexus2oneliner.py -i test/alignments/nexus_primates/ |
-		python process.py  \
+		python process.py \
 		--setup-cmd 'mkdir -p tmp' \
 		--gene-trees \
 		--mraic \
-		--archive=gzips/osx.phylo.tar.gz#bin \
+		--archive=../gzips/osx.phylo.tar.gz#bin \
 		> primate.gene.trees
 
 
 And, this will run it on Amazon:
 
-        python nexus2oneliner.py -i test/alignments/nexus_primates/|
-        python cloudforest.py \
+        python nexus2oneliner.py -i test/alignments/nexus_primates/ |
+        python process.py \
         --num-ec2-instances 2 \
         --jobconf mapred.map.tasks=1 \
         --jobconf mapred.reduce.tasks=1 \
         --jobconf mapred.reduce.tasks.speculative.execution=True \
 		--protocol=raw_value \
         --gene-trees \
-        --archive=gzips/aws.phylo.tar.gz#bin \
+        --archive=../gzips/aws.phylo.tar.gz#bin \
         > primate.aws.gene.trees \
 
 Real life example:
@@ -98,7 +98,7 @@ Real life example:
 	exons and/or are using MrAIC to infer models.
 
 		python nexus2oneliner.py -i some/real/data/nexus |
-		python cloudforest.py \
+		python process.py \
 		-r emr \
 		--num-ec2-instances 250 \
 		--jobconf mapred.map.tasks=249 \
@@ -106,7 +106,7 @@ Real life example:
 		--jobconf mapred.reduce.tasks.speculative.execution=True \
 		--jobconf mapred.task.timeout=18000000 \
 		--gene-trees \
-		--archive=gzips/aws.phylo.tar.gz#bin \
+		--archive=../gzips/aws.phylo.tar.gz#bin \
 		> lotsa.gene.trees
         
 Bootstrapping:
@@ -115,11 +115,11 @@ Bootstrapping:
 Here's the command to run it locally with the practice data:
 
 		python nexus2oneliner.py -i test/alignments/nexus_primates/ |
-		python cloudforest.py \
+		python process.py \
 		--setup-cmd 'mkdir -p tmp' \
 		--full-analysis \
 		--bootreps 5 \
-		--archive=gzips/osx.phylo.tar.gz#bin  \
+		--archive=../gzips/osx.phylo.tar.gz#bin  \
 		> primates.5bootreps.trees 
 
 And, this will run it on Amazon:
@@ -134,7 +134,7 @@ And, this will run it on Amazon:
 		--jobconf mapred.task.timeout=18000000 \
 		--full-analysis \
 		--bootreps 5 \
-		--archive=gzips/osx.phylo.tar.gz#bin  \
+		--archive=../gzips/osx.phylo.tar.gz#bin  \
 		> primates.5bootreps.aws.trees 
 
 
