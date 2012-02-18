@@ -27,6 +27,7 @@ Future directions:
 """
 
 import os
+import re
 import sys
 import gzip
 import glob
@@ -42,6 +43,7 @@ def interface():
     description="""
 
     Phybase.py calculates species trees from gene trees.
+
     Phybase.py is actually a wrapper script that runs an R package
     of the same name (Liu & Yu 2010).
 
@@ -69,7 +71,7 @@ def interface():
     analysis. Bioinformatics (Oxford, England).
     doi:10.1093/bioinformatics/btq062
     """
-    #remove initial indentation for clean printing
+
     description = textwrap.dedent(description)
 
     p = argparse.ArgumentParser(description,)
@@ -209,6 +211,10 @@ def consensus(tree_list, min_freq=0.5):
 
 def getTaxa(tree):
     t = dendropy.Tree()
+
+    if "=" in tree:
+        tree = tree.split('=')[-1].strip()
+
     t.read_from_string(tree, 'newick', preserve_underscores=True)
     taxa = t.taxon_set.labels()
     return taxa
@@ -251,6 +257,7 @@ def parseBootreps(args):
     tree 'STARConsensus' = {0}\n
     tree 'STEACConsensus' = {1}\n
     end;\n""".format(star_consensus, steac_consensus)
+
     template = textwrap.dedent(template)
 
     steac_star_cons_out = os.path.splitext(args.input_file)[0]
@@ -287,6 +294,11 @@ def parseSortedBootreps(args):
         if count == 0 and os.path.splitext(args.input_file)[-1] == '.gz': continue # skip first line in gzip file
         bootrep, tree = line.split("\t")
         bootrep = int(bootrep)
+        if "=" in tree:
+            tree = tree.split('=')[-1].strip()
+        
+        tree = re.sub("\d+Ptero", 'Ptero', tree) # HOT FIX for ptero issue REMOVE!
+
         tree = tree.strip(";")
         tree = cleanPhyMLTree(tree)
 
@@ -362,8 +374,10 @@ def parseGenetrees(args):
                 tree = tree.strip()
             else: continue
         else: tree = line.strip()
-        if tree.count("=") > 1:
-            tree = tree.split("=")[-1]
+        if "=" in tree:
+            tree = tree.split('=')[-1].strip()
+            tree = re.sub("\d+Ptero", 'Ptero', tree) # HOT FIX for ptero issue REMOVE!
+
         tree = tree.strip(";")
         tree = cleanPhyMLTree(tree)
         trees.append(tree)
@@ -380,6 +394,7 @@ def parseGenetrees(args):
     tree 'STAR' = {0}
     tree 'STEAC' = {1}
     end;""".format(star_tree, steac_tree)
+
     template = textwrap.dedent(template)
     print template
 
@@ -388,9 +403,8 @@ def print_taxa(args):
         fin = gzip.open(args.input_file, 'r')
     else:
         fin = open(args.input_file,'rU')
-    line = fin.readline()
 
-    for count, line in enumerate(fin):
+for count, line in enumerate(fin):
         if count == 1:
             tree = line.split('\t')[-1].split("=")[-1]
             taxa = getTaxa(tree)
@@ -408,13 +422,14 @@ def main():
         print_taxa(args)
         sys.exit()
 
-    if args.bootstraps == True:
+    if args.bootstraps == True and args.sorted == False:
+
         parseBootreps(args)
 
     if args.genetrees == True:
         parseGenetrees(args)
 
-    if args.sorted == True:
+    if args.bootstraps == True and args.sorted == True:
         parseSortedBootreps(args)
 
 if __name__ == '__main__':

@@ -8,13 +8,15 @@ import numpy as np
 from copy import copy, deepcopy
 from mrjob.job import MRJob
 from subprocess import Popen, PIPE
-from pkg_resources import resource_listdir
+from pkg_resources import resource_filename
+
+import pdb
 
 class ProcessPhyloData(MRJob):
     
-    def __init__(self):
-        self.cwd = resource_listdir()
-        self.binaries = os.path.join(self.cwd, 'binaries')
+    def __init__(self, args):
+        MRJob.__init__(self, args = args)
+        self.binaries = resource_filename(__name__, 'binaries')
     
     def configure_options(self):
         super(ProcessPhyloData, self).configure_options()
