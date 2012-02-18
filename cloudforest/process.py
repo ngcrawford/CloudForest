@@ -3,20 +3,19 @@ import sys
 import glob
 import tempfile
 import platform
+import unittest
 import itertools
 import numpy as np
-from copy import copy, deepcopy
 from mrjob.job import MRJob
+from copy import copy, deepcopy
+from mrjob.protocol import RawValueProtocol, HadoopStreamingProtocol
 from subprocess import Popen, PIPE
-from pkg_resources import resource_filename
-
-import pdb
 
 class ProcessPhyloData(MRJob):
     
     def __init__(self, args):
         MRJob.__init__(self, args = args)
-        self.binaries = resource_filename(__name__, 'binaries')
+        # self.binaries = resource_filename(__name__, 'binaries')
     
     def configure_options(self):
         super(ProcessPhyloData, self).configure_options()
@@ -114,21 +113,6 @@ class ProcessPhyloData(MRJob):
         oneliner = oneliner[:-1]
         return oneliner
 
-    def makeReps(self, key, line):
-    
-        loci = line.strip().split(';')            
-        loci = loci[:-1]                                                    # remove empty cell due to trailing ";" 
-        bootstapped_loci = bootstrap(loci, self.options.bootreps2run, 1)    # first bootstrap the loci
-        yield key, bootstapped_loci
-        # for bcount, bootrep in enumerate(bootstapped_loci):                 
-        #     for lcount, locus in enumerate(bootrep):
-        #         taxa, numpy_alignment = onelinerAlignment2Array(locus)      # convert loci to 2d arrays
-        #         bases_by_col = np.column_stack(numpy_alignment)             # transpose so columns are bootstapped   
-        #         shuffled = bootstrap(bases_by_col, 1, 0)                    # generate one replicate of bootstrapped columns
-        #         shuffled = np.column_stack(shuffled[0])                     # tranpose back to rows of sequences
-        #         oneliner = array2OnelinerAlignment(taxa, shuffled)          # back to oneliner
-        #         yield bcount, oneliner
-    
     def bootstrapReplicates(self, key, line):
         """ This fuction is slightly different than the standard bootstrapping fuction:
         
@@ -221,11 +205,11 @@ class ProcessPhyloData(MRJob):
              
         # RUN PHYML
         cli = '%s --input=%s --model=%s >/dev/null 2>&1' % \
-            (os.path.join(self.binaries, phyml_exe), temp_in.name, args_dict['model']) 
+            (os.path.join("bin", phyml_exe), temp_in.name, args_dict['model']) 
             
         cli_parts = cli.split()
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
-
+        
         # EXTRACT RESULTS AND FORMAT AS NEXUS TREES
         temp_string = os.path.split(temp_in.name)[1].split('.')[0]
         
@@ -247,38 +231,37 @@ class ProcessPhyloData(MRJob):
         """ Run mr-aic.pl on the each one-liner in the input file."""
                 
         oneliner = line.split("\t")[-1]     # weirdness parsing key, value
-        
+
         # PARSE EXTRA ALIGNMENT INFO
         args_dict = {}
         if ":" in line:
             args_dict = self.processOnelinerData(oneliner, args_dict)
             phylip = self.oneliner2phylip(oneliner.split(":")[-1]) # convert line to phylip
-        
+                
         else:        
             phylip = self.oneliner2phylip(oneliner)  # convert line to phylip
-                
+                        
         temp_in = tempfile.NamedTemporaryFile(suffix='.out', dir='tmp/')
         for line in phylip:
             temp_in.write(line)
         temp_in.seek(0) 
-        
+                
         temp_dir = os.path.dirname(temp_in.name)
-        
+                
         # EXECUTE MR-AIC (AIC output only)
-
+                
         cli = "%s --infile=%s --output_dir=%s >/dev/null 2>&1" % \
-            (os.path.join(self.binaries, 'mraic_mod.pl'), temp_in.name, temp_dir)
-        
+            (os.path.join("bin", 'mraic_mod.pl'), temp_in.name, temp_dir)
+                
         cli_parts = cli.split()
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
-        
-        # PARSE FILE NAMES IN TMP/ TO GET MODEL
-
+                
+        # PARSE FILE NAMES IN TMP/ TO GET MODEL          
         aic_file = glob.glob("tmp/%s.AICc-*tre*" % os.path.basename(temp_in.name))[0]
         aic_model = aic_file.split('.')[-2].split("-")[-1]
         args_dict['model'] = aic_model
         oneliner = "%s:%s" % (self.makeTreeName(args_dict), oneliner.split(":")[-1])
-        
+                
         if self.options.gene_trees == True:
             aic_fin = open(aic_file,'rU')
             for line in aic_fin:
@@ -295,36 +278,49 @@ class ProcessPhyloData(MRJob):
         while reps != 0: 
             yield reps, line
             reps -= 1
-    
-    # REDUCER FUNCTIONS     
-    def basicReducer(self, key, line):
-        """Yield lines from a generator."""
-        for item in line:
-            yield key, item   
-        
+          
     def lines2Oneliner(self, key, line):
         """Convert multiple alignments with the same key
         to a concatenated oneliner with the same key"""
         concatenated_line = "".join(line)
         yield 1, concatenated_line
+    
                 
     def steps(self):
         
+        # Do full analysis
         if self.options.full_analysis == True:
             return [self.mr(self.mrAIC, self.lines2Oneliner),
-                    self.mr(self.duplicateOneliners, self.basicReducer),
-                    self.mr(self.bootstrapReplicates, self.basicReducer),
-                    self.mr(self.phyml, self.basicReducer)] 
+                    self.mr(self.duplicateOneliners, reducer=None),
+                    self.mr(self.bootstrapReplicates, reducer=None),
+                    self.mr(self.phyml, reducer=None)] 
                             
         if self.options.gene_trees == True and self.options.mraic_opt == True:
+            
+            def output_protocol(self):     # TODO rewrite as a single fuction outside of steps.
+                return RawValueProtocol()
+            
             return [self.mr(self.mrAIC, reducer=None)]
 
         if self.options.gene_trees == True and self.options.mraic_opt == None:
-            return [self.mr(self.phyml, reducer=None)]
             
-        # else:
-        #     return [self.mr(self.makeReps, self.boot_reducer), 
-        #             self.mr(self.phyml, self.boot_reducer),]
+            def output_protocol(self):
+                return RawValueProtocol()
+            
+            return [self.mr(self.phyml, reducer=None)]
 
+
+class ProcessPhyloDataFunctions(unittest.TestCase):
+    # mr_job = MRYourJob.sandbox()
+    # assert_equal(list(mr_job.reducer('foo', ['bar', 'baz'])), [...])
+    ProcessPhyloData.
+    ProcessPhyloData.sandbox(stdin=open("test/alignments/3.oneliners"))
+
+    # test_mrAIC()
+    # test_lines2Oneliner()
+    # test_duplicateOneliners
+    # test_bootstrapReplicates
+    # test_phyml
+            
 if __name__ == '__main__':
     ProcessPhyloData.run()
