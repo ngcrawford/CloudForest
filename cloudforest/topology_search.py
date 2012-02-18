@@ -58,55 +58,59 @@ def reroot_trees(trees, root):
     return new_tree_list
 
 trees = dendropy.TreeList()
-trees.read_from_path('reptiles-10-species.oneliners.AICc.genetrees.trees.nex','nexus')
+trees.read_from_path('/Users/ngcrawford/Downloads/reptiles-10-species.oneliners.AICc.genetrees.trees.nex','nexus')
 trees = reroot_trees(trees,'HomSapie')
 
 
 archosaurs_w_turtles = ['CroPoros','AllMissi','GalGallu','ZebFinch', 'ChrPicta', 'PelSubru']
 birds_w_turtles = ['GalGallu','ZebFinch', 'ChrPicta', 'PelSubru']
 crocs_w_turtles = ['CroPoros','AllMissi', 'ChrPicta', 'PelSubru']
-lepidosaurs_w_tuatara = ['AnoCarol', 'PanGutta', 'SphTuata']
-lepidosaurs = ['PanGutta', 'SphTuata']
+lepidosaurs_w_turtles = ['AnoCarol', 'PanGutta', 'SphTuata','ChrPicta', 'PelSubru']
+squamates_w_turtles = ['AnoCarol', 'PanGutta','ChrPicta', 'PelSubru']
+mammals_w_turltes = ['HomSapie','ChrPicta', 'PelSubru' ]
 
-snakes_w_tuatara = ['PanGutta', 'SphTuata']
-lepidosaurs_w_tuatara = ['AnoCarol', 'PanGutta', 'SphTuata']
-lizard_w_tuatara = ['AnoCarol', 'SphTuata']
-lepidosaurs = ['AnoCarol', 'PanGutta']
-lepidosaurs_w_turtles = ['AnoCarol', 'PanGutta','ChrPicta', 'PelSubru']
+lepidosaurs = ['AnoCarol', 'PanGutta', 'SphTuata']
 archosaurs = ['CroPoros','AllMissi','GalGallu','ZebFinch']
+squamates = ['AnoCarol', 'PanGutta']
+birds = ['GalGallu','ZebFinch']
+crocs = ['CroPoros','AllMissi']
+turtles = ['ChrPicta', 'PelSubru']
 
 print 'archosaurs_w_turtles', trees.frequency_of_split(labels=archosaurs_w_turtles)
 print 'lepidosaurs_w_turtles', trees.frequency_of_split(labels=lepidosaurs_w_turtles)
 print 'birds_w_turtles', trees.frequency_of_split(labels=birds_w_turtles)
 print 'crocs_w_turtles', trees.frequency_of_split(labels=crocs_w_turtles)
+print 'squamates_w_turtles', trees.frequency_of_split(labels=squamates_w_turtles)
+print 'mammals_w_turltes', trees.frequency_of_split(labels=mammals_w_turltes)
+
 print 'archosaurs', trees.frequency_of_split(labels=archosaurs)
-
 print 'lepidosaurs', trees.frequency_of_split(labels=lepidosaurs)
-print 'lizard_w_tuatara', trees.frequency_of_split(labels=lizard_w_tuatara)
-print 'snakes_w_tuatara', trees.frequency_of_split(labels=snakes_w_tuatara)
-print 'lepidosaurs_w_tuatara', trees.frequency_of_split(labels=lepidosaurs_w_tuatara)
+print 'squamates', trees.frequency_of_split(labels=squamates)
+print 'birds', trees.frequency_of_split(labels=birds)
+print 'crocs', trees.frequency_of_split(labels=crocs)
+print 'turtles', trees.frequency_of_split(labels=turtles)
 
 
-expected_tree_newick = '[&R] (HomSapie, ((((CroPoros,AllMissi),(GalGallu,ZebFinch)),(ChrPicta,PelSubru)),(SphTuata,(AnoCarol,PanGutta))))'
-expected_tree = dendropy.Tree()
-expected_tree.read_from_string(expected_tree_newick,'newick')
-expected_tree.as_ascii_plot()
-print expected_tree.as_ascii_plot()
-for node in expected_tree.preorder_internal_node_iter():
-    subtree = dendropy.Tree()
-    subtree_newick = node.as_newick_string()
-    subtree.read_from_string(subtree_newick,'newick')
-    print subtree_newick, subtree_percentage(trees, subtree)
-     
-
-
-#query_tree_newick = '(AnoCarol, PanGutta)'
-query_tree_newick = '((SphTuata,(AnoCarol,PanGutta)),(ChrPicta,PelSubru))'
-#query_tree_newick = '(SphTuata, (AnoCarol, PanGutta))'
-#query_tree_newick = '(((CroPoros,AllMissi),(GalGallu,ZebFinch)), (ChrPicta, PelSubru))'
-subtree = dendropy.Tree()
-subtree.read_from_string(query_tree_newick,'newick')
-print subtree_percentage(trees, subtree)
+# expected_tree_newick = '[&R] (HomSapie, ((((CroPoros,AllMissi),(GalGallu,ZebFinch)),(ChrPicta,PelSubru)),(SphTuata,(AnoCarol,PanGutta))))'
+# expected_tree = dendropy.Tree()
+# expected_tree.read_from_string(expected_tree_newick,'newick')
+# expected_tree.as_ascii_plot()
+# print expected_tree.as_ascii_plot()
+# for node in expected_tree.preorder_internal_node_iter():
+#     subtree = dendropy.Tree()
+#     subtree_newick = node.as_newick_string()
+#     subtree.read_from_string(subtree_newick,'newick')
+#     print subtree_newick, subtree_percentage(trees, subtree)
+#      
+# 
+# 
+# #query_tree_newick = '(AnoCarol, PanGutta)'
+# query_tree_newick = '((SphTuata,(AnoCarol,PanGutta)),(ChrPicta,PelSubru))'
+# #query_tree_newick = '(SphTuata, (AnoCarol, PanGutta))'
+# #query_tree_newick = '(((CroPoros,AllMissi),(GalGallu,ZebFinch)), (ChrPicta, PelSubru))'
+# subtree = dendropy.Tree()
+# subtree.read_from_string(query_tree_newick,'newick')
+# print subtree_percentage(trees, subtree)
 
 
 
