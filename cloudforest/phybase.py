@@ -13,17 +13,17 @@ to parse NJ trees from Paup and ML trees from PhyMl as the tree formats are slig
 Dependencies:
 
    dendropy - http://packages.python.org/DendroPy/tutorial/index.html
-   rpy2 - http://rpy.sourceforge.net/rpy2.html 
+   rpy2 - http://rpy.sourceforge.net/rpy2.html
    phybase - http://cars.desu.edu/faculty/lliu/research/phybase.html
 
 Future directions:
 
    - add commandline (optparse)
    - add NJtrees fuction
-   - Parsing of trees from Garli 
+   - Parsing of trees from Garli
    - Bootstrapping with Phybase
-   - Nexus output of Steac and Star trees 
-      - also png/svg output? 
+   - Nexus output of Steac and Star trees
+      - also png/svg output?
 """
 
 import os
@@ -39,40 +39,42 @@ import rpy2.robjects as robjects
 
 def interface():
     """ create commandline interface for script"""
-    
+
     description="""
-    
-Phybase.py calculates species trees from gene trees.
-Phybase.py is actually a wrapper script that runs an R package
-of the same name (Liu & Yu 2010).
 
-Dependancies:
--------------
+    Phybase.py calculates species trees from gene trees.
 
-Phybase R package: basic functions for phylogenetic analysis
-    Installation: 
-        At the R prompt type 'install.packages("Phybase")'
-    Website: http://cran.r-project.org/web/packages/phybase/index.html
+    Phybase.py is actually a wrapper script that runs an R package
+    of the same name (Liu & Yu 2010).
 
-DendroPy: phylogenetic computing library:
-    Installation: sudo easy_install -U dendropy
-    Website: http://packages.python.org/DendroPy/
+    Dependancies:
+    -------------
 
-Rpy2: simple and efficient access to R from Python
-    Installation: sudo easy_install -U rpy2
-    Website: http://rpy.sourceforge.net/rpy2.html
-    
-Argparse: present in python 2.7 and later (I think)
+    Phybase R package: basic functions for phylogenetic analysis
+        Installation:
+            At the R prompt type 'install.packages("Phybase")'
+        Website: http://cran.r-project.org/web/packages/phybase/index.html
 
-References:
------------
-Liu, L., & Yu, L. (2010). Phybase: an R package for species tree 
-analysis. Bioinformatics (Oxford, England). 
-doi:10.1093/bioinformatics/btq062 
-"""
-     
+    DendroPy: phylogenetic computing library:
+        Installation: sudo easy_install -U dendropy
+        Website: http://packages.python.org/DendroPy/
+
+    Rpy2: simple and efficient access to R from Python
+        Installation: sudo easy_install -U rpy2
+        Website: http://rpy.sourceforge.net/rpy2.html
+
+    Argparse: present in python 2.7 and later (I think)
+
+    References:
+    -----------
+    Liu, L., & Yu, L. (2010). Phybase: an R package for species tree
+    analysis. Bioinformatics (Oxford, England).
+    doi:10.1093/bioinformatics/btq062
+    """
+    description = textwrap.dedent(description)
+
     p = argparse.ArgumentParser(description,)
-    
+
     p.add_argument('--input-file','-i',
         help='Path to input file.')
     p.add_argument('--outgroup','-o',
@@ -87,27 +89,27 @@ doi:10.1093/bioinformatics/btq062
         help='Set this flag if your bootstraps are sorted by key.')
 
     args = p.parse_args()
-    
+
     # check options for errors, etc.
     if args.input_file == None:
         print "Input directory required."
-        print "Type 'python phybase.py -h' for details" 
+        print "Type 'python phybase.py -h' for details"
         sys.exit()
-    
+
     if args.genetrees == True and args.bootstraps == True:
         print "You must pick either genetrees or bootstraps,"
         print "but not both."
-        print "Type 'python phybase.py -h' for details" 
+        print "Type 'python phybase.py -h' for details"
         sys.exit()
 
     if args.genetrees == False and args.bootstraps == False and args.sorted == False and args.print_taxa == False:
         print "You must select either --genetrees, --bootstraps, --sorted, or --print-taxa"
-        print "Type 'python phybase.py -h' for details" 
+        print "Type 'python phybase.py -h' for details"
         sys.exit()
-    
+
     if args.print_taxa != True and args.outgroup == None:
         print 'You much define an outgroup'
-        print "Type 'python phybase.py -h' for details" 
+        print "Type 'python phybase.py -h' for details"
         sys.exit()
 
     return args
@@ -124,47 +126,6 @@ def remove_branch_lengths(str_newick_tree):
         nd.label = None
     tree = tree.as_newick_string()
     return tree
-    
-    # para_pos = None
-    # in_para = False
-    # in_colon = False
-    # final_tree = ""
-    # slices = []
-    # for count, char in enumerate(str_newick_tree):
-    #     if char == ")":
-    #         para_pos = count + 1
-    #         in_para = True
-    #         in_colon = False
-    #     
-    #     if char == "(":
-    #         in_para = False
-    #             
-    #     if char == ":" and in_para == True and in_colon == False:
-    #         slices.append([para_pos, count])
-    #     
-    #     if char == ":":
-    #         in_colon = True  
-    # 
-    # final_tree = ''
-    # slices = array(slices)
-    # slices = slices.flatten()
-    # for count, item in enumerate(slices):
-    #     next_count = count + 1
-    #     if count == 0:
-    #         final_tree += (str_newick_tree[:item])
-    #     
-    #     if next_count + 1 > slices.shape[0]:
-    #         start = slices[count]
-    #         final_tree += str_newick_tree[item:]
-    #         break
-    #         
-    #     if count % 2 != 0:
-    #         start = slices[count]
-    #         stop = slices[next_count]          
-    #         final_tree += str_newick_tree[start:stop]
-    # 
-    # return final_tree
-                
 
 def branch_lengths_2_decimals(str_newick_tree):
     """replaces branch lengths in scientific notation with decimals"""
@@ -173,14 +134,14 @@ def branch_lengths_2_decimals(str_newick_tree):
     num = ''
     new_tree = ''
     for count, char in enumerate(str_newick_tree):
-        if char == ':': 
+        if char == ':':
             colon_s = count
             continue
 
-        if char in (')',','): 
+        if char in (')',','):
             comma_back_paren_s = 1
             num = '%f' % float(num)
-            new_tree += ":" + num 
+            new_tree += ":" + num
             colon_s = 0
             num = ''
 
@@ -190,7 +151,6 @@ def branch_lengths_2_decimals(str_newick_tree):
         if colon_s == 0:
             new_tree += char
     new_tree = new_tree.strip('\'').strip('\"').strip('\'') + ";"
-           
     return new_tree
 
 def cleanPhyMLTree(tree):
@@ -201,7 +161,7 @@ def cleanPhyMLTree(tree):
     tree = branch_lengths_2_decimals(tree)    # converts numbers in sci. notation
                                               # to decimals (e.g., 1e-22 = 0.000000)
     return tree
-    
+
 def phybase(trees, outgroup, all_taxa):
     """ generate Steac and Star trees from a list of trees. Requires Phybase and rpy2."""
     robjects.r['library']('phybase')
@@ -301,22 +261,22 @@ def parseBootreps(args):
 
 def parseSortedBootreps(args):
     """docstring for parseBootreps"""
-    
+
     taxa = None
     line_id = None
     trees = []
     steac_trees = []
     star_trees = []
-    
+
     # SETUP OUTPUT FILES
     star_file = os.path.splitext(args.input_file)[0]
     star_file += '.star.trees'
     star_fout = open(star_file,'w')
-    
+
     steac_file = os.path.splitext(args.input_file)[0]
     steac_file += '.steac.trees'
     steac_fout = open(steac_file,'w')
-    
+
     # LOOP THROUGH SORTED FILE
     if os.path.splitext(args.input_file)[-1] == '.gz':
         fin = gzip.open(args.input_file, 'r')
@@ -328,6 +288,11 @@ def parseSortedBootreps(args):
         if count == 0 and os.path.splitext(args.input_file)[-1] == '.gz': continue # skip first line in gzip file
         bootrep, tree = line.split("\t")
         bootrep = int(bootrep)
+        if "=" in tree:
+            tree = tree.split('=')[-1].strip()
+        
+        tree = re.sub("\d+Ptero", 'Ptero', tree) # HOT FIX for ptero issue REMOVE!
+
         tree = tree.strip(";")
         tree = cleanPhyMLTree(tree)
 
@@ -402,11 +367,11 @@ def parseGenetrees(args):
                 tree = tree.strip()
             else: continue
         else: tree = line.strip()
-        
+
         if "=" in tree:
             tree = tree.split('=')[-1].strip()
             tree = re.sub("\d+Ptero", 'Ptero', tree) # HOT FIX for ptero issue REMOVE!
-        
+
         tree = tree.strip(";")
         tree = cleanPhyMLTree(tree)
         trees.append(tree)
@@ -416,7 +381,6 @@ def parseGenetrees(args):
                 print args.outgroup, 'not in taxa:', taxa
                 sys.exit() 
 
-    print trees
     star_tree, steac_tree = phybase(trees, args.outgroup, taxa)
 
     template =  """#NEXUS
@@ -424,6 +388,7 @@ begin trees;
 tree 'STAR' = %s
 tree 'STEAC' = %s
 end;""" % (star_tree, steac_tree)
+    template = textwrap.dedent(template)
     print template
 
 def print_taxa(args):
@@ -431,11 +396,17 @@ def print_taxa(args):
         fin = gzip.open(args.input_file, 'r')
     else:
         fin = open(args.input_file,'rU')
-    line = fin.readline()
-    
+    # line = fin.readline()
+    # print line
     for count, line in enumerate(fin): 
+        print line
         if count == 1:
-            tree = line.split('\t')[-1]
+            if "\t" in line:
+                tree = line.split('\t')[-1]
+            else: 
+                tree = line.strip()
+            
+            print tree
             taxa = getTaxa(tree)
             taxa.sort()
             taxa.pop(0) # remove
@@ -443,23 +414,23 @@ def print_taxa(args):
                 print taxon
             print "---------\n", taxon_count, 'total taxa.'
             break
-    
+
 def main():
     args = interface()
-    
+
     if args.print_taxa == True:
         print_taxa(args)
         sys.exit()
-    
-    if args.bootstraps == True:
+
+    if args.bootstraps == True and args.sorted == False:
         parseBootreps(args)
-    
+
     if args.genetrees == True:
         parseGenetrees(args)
-    
-    if args.sorted == True:
+
+    if args.bootstraps == True and args.sorted == True:
         parseSortedBootreps(args)
-    
+
 if __name__ == '__main__':
     main()
     pass
