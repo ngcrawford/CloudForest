@@ -9,7 +9,11 @@ import numpy as np
 from mrjob.job import MRJob
 from copy import copy, deepcopy
 from mrjob.protocol import RawValueProtocol, HadoopStreamingProtocol
+from mrjob.local import LocalMRJobRunner
 from subprocess import Popen, PIPE
+
+# For UnitTests
+from mrjob.conf import dump_mrjob_conf
 
 class ProcessPhyloData(MRJob):
     
@@ -285,42 +289,80 @@ class ProcessPhyloData(MRJob):
         concatenated_line = "".join(line)
         yield 1, concatenated_line
     
+    def basic_reducer(self, key, line):
+        """"""
+        yield key, line
+
+    
                 
     def steps(self):
         
-        # Do full analysis
-        if self.options.full_analysis == True:
-            return [self.mr(self.mrAIC, self.lines2Oneliner),
-                    self.mr(self.duplicateOneliners, reducer=None),
-                    self.mr(self.bootstrapReplicates, reducer=None),
-                    self.mr(self.phyml, reducer=None)] 
-                            
-        if self.options.gene_trees == True and self.options.mraic_opt == True:
+        # # Do full analysis
+        # if self.options.full_analysis == True:
+        #     return [self.mr(self.mrAIC, self.lines2Oneliner),
+        #               self.mr(self.duplicateOneliners, reducer=None),
+        #               self.mr(self.bootstrapReplicates, reducer=None),
+        #               self.mr(self.phyml, reducer=None)] 
+        #                       
+        # if self.options.gene_trees == True and self.options.mraic_opt == True:
+        #       
+        #     def output_protocol(self):     # TODO rewrite as a single fuction outside of steps.
+        #         return RawValueProtocol()
+        #       
+        #     return [self.mr(self.mrAIC, reducer=None)]
+        # 
+        # if self.options.gene_trees == True and self.options.mraic_opt == None:
+        #     print 'here'
+        #     def output_protocol(self):    # TODO rewrite as a single fuction outside of steps.
+        #         return RawValueProtocol()
             
-            def output_protocol(self):     # TODO rewrite as a single fuction outside of steps.
-                return RawValueProtocol()
-            
-            return [self.mr(self.mrAIC, reducer=None)]
-
-        if self.options.gene_trees == True and self.options.mraic_opt == None:
-            
-            def output_protocol(self):
-                return RawValueProtocol()
-            
-            return [self.mr(self.phyml, reducer=None)]
+        return [self.mr(mapper=self.phyml, reducer=self.basic_reducer)]
 
 
 class ProcessPhyloDataFunctions(unittest.TestCase):
-    # mr_job = MRYourJob.sandbox()
-    # assert_equal(list(mr_job.reducer('foo', ['bar', 'baz'])), [...])
-    ProcessPhyloData.
-    ProcessPhyloData.sandbox(stdin=open("test/alignments/3.oneliners"))
+    # 
+    # def setUp(self):
+    #     self.make_tmp_dir_and_mrjob_conf()
+    # 
+    # # def tearDown(self):
+    # #     self.rm_tmp_dir()
+    # 
+    # def make_tmp_dir_and_mrjob_conf(self):    
+    #     self.tmp_dir = tempfile.mkdtemp()
+    #     self.mrjob_conf_path = os.path.join(self.tmp_dir, 'mrjob.conf')
+    #     dump_mrjob_conf({'runners': {'local': {}}},
+    #                     open(self.mrjob_conf_path, 'w'))
+    # 
+    def test_input_file(self):
+        input_path = "test/alignments/3.oneliners"
 
-    # test_mrAIC()
-    # test_lines2Oneliner()
-    # test_duplicateOneliners
-    # test_bootstrapReplicates
-    # test_phyml
-            
+        mr_job = ProcessPhyloData([
+            "--setup-cmd='mkdir -p tmp'",
+            "--gene-trees",
+            "--archive=../gzips/osx.phylo.tar.gz#bin"])
+        
+
+        mr_job.sandbox(open(input_path,'rU'))
+        with mr_job.make_runner() as runner:
+            assert isinstance(runner, LocalMRJobRunner)
+            print runner._get_steps()
+            print runner._get_local_tmp_dir()
+            # runner.run()
+        # for line in runner.stream_output():
+        #     print line
+        #     key, value = mr_job.parse_output_line(line)
+        #     print key, value
+        
+
+        #     self.assertEqual(runner.counters()[0]['count']['combiners'], 2)
+        # 
+        # self.assertEqual(sorted(results),
+        #                  [(input_path, 3), (input_gz_path, 1)])
+    
+                
+    pass
+    
 if __name__ == '__main__':
-    ProcessPhyloData.run()
+    #ProcessPhyloData.run()
+    unittest.main()
+    pass
