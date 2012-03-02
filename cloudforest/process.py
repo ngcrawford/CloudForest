@@ -1,12 +1,13 @@
 import os
 import sys
 import glob
-import pprint
+import test
 import tempfile
 import platform
 import unittest
 import itertools
 import StringIO
+import argparse
 import numpy as np
 from mrjob.job import MRJob
 from copy import copy, deepcopy
@@ -314,25 +315,7 @@ class ProcessPhyloData(MRJob):
             
             return [self.mr(mapper=self.phyml, reducer=None)]
 
-
-class ProcessPhyloDataFunctions(unittest.TestCase):
-
-    def test_input_file(self):
-        
-        test_data = open('test/alignments/3.oneliners','rU')
-        mr_job = ProcessPhyloData(['-r', 'local', '--setup-cmd', 'mkdir -p tmp',
-            '--gene-trees','--archive=../gzips/osx.phylo.tar.gz#bin', "-"])
-    
-        mr_job.sandbox(stdin=test_data)
-        with mr_job.make_runner() as runner:
-            runner.run()
-            for line in runner.stream_output():
-                # Use the job's specified protocol to read the output
-                key, value = mr_job.parse_output_line(line)
-                results.append(value)              
-    pass
     
 if __name__ == '__main__':
-    #ProcessPhyloData.run()
-    unittest.main()
+    ProcessPhyloData.run()
     pass
