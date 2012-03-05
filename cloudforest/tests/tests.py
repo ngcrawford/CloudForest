@@ -1,5 +1,5 @@
 import unittest
-from process import ProcessPhyloData
+from cloudforest.process import ProcessPhyloData
 
 class TestCloudForestFunctions(unittest.TestCase):
 
@@ -96,5 +96,4 @@ class TestCloudForestFunctions(unittest.TestCase):
         
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestCloudForestFunctions)
-
     unittest.TextTestRunner(verbosity=3).run(suite)
