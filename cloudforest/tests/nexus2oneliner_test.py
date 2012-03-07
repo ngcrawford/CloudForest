@@ -38,7 +38,8 @@ class TestNexus2OnelinereFunctions(unittest.TestCase):
 						end;"""
 
 		self.oneliner = """\
-						chrm=text_nexus:MusMuscu,----TCCTAGCTGAACAGAGAAGGGTGATTAACGATAGCAATTTATT,\
+						chrm=text_nexus:\
+						MusMuscu,----TCCTAGCTGAACAGAGAAGGGTGATTAACGATAGCAATTTATT,\
 						OtoGarne,GTAATCATAGTTGAACCGAGAAAGGTGATTAACGATAGCAATTTATT,\
 						CalJacch,GTAATCATAGTTGAACCAAGAAGGGTGATTAACGATAGCAATTTATT,\
 						GorGoril,---ATCATAGTTGAACCAAGAAGAGTGATTAACGATAGCAATTTATT,\
@@ -61,10 +62,12 @@ class TestNexus2OnelinereFunctions(unittest.TestCase):
 		self.assertEqual(cleaned_seq, "ATCT--ATC--")
 
 	def test_nexus2oneliner(self):
+		# dedent and clean lines of intervening tabs
 		nexus = textwrap.dedent(self.nexus)
+		test_str = textwrap.dedent(self.oneliner).replace("\t", "")
+
 		nexus_lines = nexus.split("\n")
 		result = nexus2oneliner.nexus2oneliner(nexus_lines, self.name)
-		test_str = textwrap.dedent(self.oneliner).replace("\t", "")
 		self.assertEqual(result, test_str)
 
 
