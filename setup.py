@@ -11,6 +11,7 @@ setup(
     license='LICENSE.txt',
     description='Generate gene and species trees from thousands of loci using Map-Reduce.',
     long_description=open('README.rst').read(),
+    test_suite='tests',
     install_requires=[
         "mrjob >= 0.2.8",
         "flask >= 0.8",

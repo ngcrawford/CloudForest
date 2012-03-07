@@ -1,6 +1,20 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+"""
+nexus2oneliners.py
+
+Created by Nicholas Crawford and Brant C. Faircloth Copyright (c) 2010 Nicholas Crawford and
+Brant C. Faircloth. All rights reserved.
+
+Converts NEXUS formated alignments to a oneliner format suitable for cloudforest.
+
+Details on the NEXUS multiple alignment format is avilable here:
+
+http://www.bioperl.org/wiki/NEXUS_multiple_alignment_format
+"""
+
+
 import os
 import sys
 import glob
