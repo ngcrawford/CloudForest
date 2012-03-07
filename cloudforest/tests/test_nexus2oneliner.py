@@ -15,7 +15,7 @@ class TestNexus2OnelinereFunctions(unittest.TestCase):
 
 	def setUp(self):
 		"""Create necessary datasets for testing"""
-		self.name = 'text_nexus'
+		self.name = 'test_nexus'
 		self.seq = "ATCT--ATCNN"
 		self.no_data_seq = "?????----"
 		self.nexus = """\
@@ -38,7 +38,7 @@ class TestNexus2OnelinereFunctions(unittest.TestCase):
 						end;"""
 
 		self.oneliner = """\
-						chrm=text_nexus:\
+						chrm=test_nexus:\
 						MusMuscu,----TCCTAGCTGAACAGAGAAGGGTGATTAACGATAGCAATTTATT,\
 						OtoGarne,GTAATCATAGTTGAACCGAGAAAGGTGATTAACGATAGCAATTTATT,\
 						CalJacch,GTAATCATAGTTGAACCAAGAAGGGTGATTAACGATAGCAATTTATT,\
