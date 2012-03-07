@@ -23,23 +23,24 @@ import argparse
 def get_args():
     """Parse sys.argv"""
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i','--input-dir', required=True, help='The input directory containing the nexus files.')
+    parser.add_argument('-i','--input-dir', 
+        required=True, 
+        help='The input directory containing the nexus files.')
     args = parser.parse_args()
     return args
 
 def isSeqOK(seq):
+    """Checks that seq doesn't contain """
     numb_of_qs = 0
     for char in seq:
         if char == "?" or char == "-":
             numb_of_qs +=1
     
-    if numb_of_qs == len(seq):
-        return False
-    if numb_of_qs < len(seq):
-        return True
+    if numb_of_qs == len(seq): return False
+    if numb_of_qs < len(seq): return True
 
 def removeAmbiguousBases(seq):
-    """ Converts Ambiguous bases to ?"""
+    """ Converts ambiguous bases to - as required by PhyML"""
     new_seq = ""
     for char in seq:
         if char not in  ["A", "T", "C", "G"]:
@@ -48,6 +49,7 @@ def removeAmbiguousBases(seq):
     return new_seq
 
 def nexus2oneliner(fin, name=None):
+    """Does the main processing of the nexus files"""
     
     as_one_liner = False
     in_data = False
@@ -71,7 +73,7 @@ def nexus2oneliner(fin, name=None):
                 if len(line.strip()) == 0: continue
                 taxon, seq = line.strip().split()
                 #seq = removeAmbiguousBases(seq)     # remove any ambiguous bases (e.g,. not A,T,C, or G)
-                if isSeqOK(seq) == False: continue  # skip taxa with not data (= all ?????)
+                if isSeqOK(seq) == False: continue  # skip taxa with no data (= all ?????)
     
                 if '_' in taxon:
                     # taxon = taxon.split('_')[-1]
@@ -96,6 +98,10 @@ def nexus2oneliner(fin, name=None):
     else:
         sys.stdout.write("chrm=" + name + ":" + final_line + ";\n")
 
+    return "chrm=" + name + ":" + final_line + ";"
+
+
+
 def processNexusFiles():
     args = get_args()
     in_dir = os.path.join(args.input_dir, "*.nex*")
@@ -107,4 +113,6 @@ def processNexusFiles():
         nexus2oneliner(fin, name=fileID)
         fin.close()
 
-processNexusFiles()
+
+if __name__ == '__main__':
+    processNexusFiles()
