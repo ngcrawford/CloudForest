@@ -94,12 +94,9 @@ def nexus2oneliner(fin, name=None):
             in_data = True
     
     if as_one_liner == True:
-        sys.stdout.write(final_line + ";")
+        return final_line + ";"
     else:
-        sys.stdout.write("chrm=" + name + ":" + final_line + ";\n")
-
-    return "chrm=" + name + ":" + final_line + ";"
-
+        return "chrm=" + name + ":" + final_line + ";\n"
 
 
 def processNexusFiles():
@@ -110,7 +107,8 @@ def processNexusFiles():
         fileID = os.path.splitext(filename)[0]
         fin = open(nexus_file,'rU')
 
-        nexus2oneliner(fin, name=fileID)
+        oneliner = nexus2oneliner(fin, name=fileID)
+        sys.stdout.write(oneliner)
         fin.close()
 
 
