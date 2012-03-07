@@ -98,4 +98,8 @@ def processNexusFiles():
         parsePhylip(fin, name=fileID)
         fin.close()
 
-processNexusFiles()
+if __name__ == '__main__':
+    processPhylipFiles()
+    pass
+
+
