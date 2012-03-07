@@ -31,8 +31,8 @@ def printAlignment(count, taxa_seq_dict, name):
     for key, value in taxa_seq_dict.iteritems():
         final_line += '%s,%s,' % (key, value)
     final_line = final_line[:-1]
-    final_line = str(name.strip()) + "|" + final_line + ";\n"
-    sys.stdout.write(final_line)
+    final_line = "chrm=" + str(name.strip()) + ":" + final_line + ";\n"
+    return final_line
 
 def parsePhylip(fin, name=None):
     # STORAGE DICTIONARIES AND VARIABLES 
