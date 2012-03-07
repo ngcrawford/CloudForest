@@ -86,9 +86,12 @@ def parsePhylip(fin, name=None):
          
         count += 1
     
-        # PRINT COMPLETE ALIGNMENT AS LINE  
-        if len(taxa_seq_dict) != 0:
-            printAlignment(alignment_count, taxa_seq_dict, name)
+    # PRINT COMPLETE ALIGNMENT AS LINE  
+    if len(taxa_seq_dict) != 0:
+        oneliner += printAlignment(alignment_count, taxa_seq_dict, name)
+    
+    return oneliner
+
 
 def processNexusFiles():
     args = get_args()
