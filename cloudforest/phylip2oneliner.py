@@ -44,7 +44,9 @@ def parsePhylip(fin, name=None):
         line = line.strip()         # remove extra whitespace 
     
         # IDENTIFY START OF ALIGNMENT
-        if len(line.split()) == 2:
+        if len(line.split()) == 2 and line.split()[0].isdigit() == True \
+            and line.split()[1].isdigit() == True:
+
             taxa_count, align_len = line.split(' ')
         
             # DOUBLE CHECK THAT LINE IS START OF ALIGNMENT
