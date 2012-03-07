@@ -40,6 +40,7 @@ def parsePhylip(fin, name=None):
     taxa_seq_dict = {}
     count = 0
     alignment_count = 0
+    oneliner = ""
     for line in fin:    
         line = line.strip()         # remove extra whitespace 
     
@@ -52,10 +53,6 @@ def parsePhylip(fin, name=None):
             # DOUBLE CHECK THAT LINE IS START OF ALIGNMENT
             if taxa_count.isdigit() == False: continue
             if align_len.isdigit() == False: continue
-        
-            # PRINT COMPLETE ALIGNMENT AS LINE  
-            if len(taxa_seq_dict) != 0:
-                printAlignment(alignment_count, taxa_seq_dict)
         
             # UPDATE VALUES
             taxa_count = int(taxa_count.strip())
@@ -83,7 +80,7 @@ def parsePhylip(fin, name=None):
                 dict_id = max(taxa_id_dict.keys())
             taxa_name = taxa_id_dict[dict_id]
             taxa_seq_dict[taxa_name] = taxa_seq_dict[taxa_name] + line.replace(' ','').strip()
-         
+
         count += 1
     
     # PRINT COMPLETE ALIGNMENT AS LINE  
@@ -93,14 +90,15 @@ def parsePhylip(fin, name=None):
     return oneliner
 
 
-def processNexusFiles():
+def processPhylipFiles():
     args = get_args()
     in_dir = os.path.join(args.input_dir, "*.phylip*")
     for count, nexus_file in enumerate(glob.glob(in_dir)):
         filename = os.path.split(nexus_file)[-1]
         fileID = os.path.splitext(filename)[0]
         fin = open(nexus_file,'rU')
-        parsePhylip(fin, name=fileID)
+        oneliners = parsePhylip(fin, name=fileID)
+        sys.stdout.write(oneliners)
         fin.close()
 
 if __name__ == '__main__':
