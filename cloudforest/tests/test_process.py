@@ -20,7 +20,7 @@ class TestCloudForestFunctions(unittest.TestCase):
             makes the appropriate number of trees.
         """
         
-        test_data = open('tests/alignments/3.oneliners','rU')
+        test_data = open('alignments/3.oneliners','rU')
         mr_job = ProcessPhyloData(['-r', 'local', '--setup-cmd', 
                                     'mkdir -p tmp','--gene-trees',
                                     '--archive=../gzips/osx.phylo.tar.gz#bin',
@@ -43,7 +43,7 @@ class TestCloudForestFunctions(unittest.TestCase):
             command set calculates the correct evolutionary models.
         """
         
-        test_data = open('tests/alignments/3.oneliners','rU')
+        test_data = open('alignments/3.oneliners','rU')
         mr_job = ProcessPhyloData(['-r', 'local', '--setup-cmd', 
                                     'mkdir -p tmp','--gene-trees',
                                     '--mraic',
@@ -63,16 +63,16 @@ class TestCloudForestFunctions(unittest.TestCase):
         models = [ item.split(" ")[1].strip("'").split('=')[-1] for item in results]
 
         # check results.
-        # result looks like: ['GTRI', 'GTRG', 'GTRG'])
-        self.assertIn('GTRI', models)
-        self.assertIn('GTRG', models)
+        # result looks like: ['GTR', 'HKY', 'HKY'])
+        self.assertIn('GTR', models)
+        self.assertIn('HKY', models)
         self.assertEqual(len(results),3)
 
 
     def test_Bootstrapping(self):
         """Tests that bootstraps produces the correct number or replicates"""
 
-        test_data = open('tests/alignments/3.oneliners','rU')
+        test_data = open('alignments/3.oneliners','rU')
         mr_job = ProcessPhyloData(['-r', 'local', 
                                     '--setup-cmd', 'mkdir -p tmp',
                                     '--full-analysis',
