@@ -1,0 +1,43 @@
+import textwrap
+import unittest
+from cloudforest import phylip2oneliner
+
+class TestPhylip2OnelinerFunctions(unittest.TestCase):
+
+	def setUp(self):
+		self.phylip = """\
+		 10 430
+		mus_mus    ----TCCTAG CTGAACAGAG AAGGGTGATT AACGATAGCA ATTTATTGTA
+		oto_gar    GTAATCATAG TTGAACCGAG AAAGGTGATT AACGATAGCA ATTTATTGTA
+		cal_jac    GTAATCATAG TTGAACCAAG AAGGGTGATT AACGATAGCA ATTTATTGTA
+		gor_gor    ---ATCATAG TTGAACCAAG AAGAGTGATT AACGATAGCA ATTTATTGTA
+		hom_sap    GTAATCATAG TTGAACCAAG AAGAGTGATT AACGATAGCA ATTTATTGTA
+		pan_tro    GTAATCACAG TTGAACCAAG AAGAGTGATT AACGATAGCA ATTTATTGTA
+		pon_abe    GTAATCATAG TTGAACCAAG AAGGGTGATT AACGATAGCA ATTTATTGTA
+		nom_leu    GTAATCATAG TTGAACCAAG AAGGGTGATT AACGATAGCA ATTTATTGTA
+		pap_ham    GTAATCATGG TTGAACCAAG AAGGGTGATT AACGATAGCA ATTTATTGTA
+		rhe_mac    GTAATCATGG TTGAACCAAG AAGGGTGATT AACGATAGCA ATTTATTGTA
+		
+		AACGATAGCA ATTTATTGTA
+		AACGATAGCA ATTTATTGTA
+		AACGATAGCA ATTTATTGTA
+		AACGATAGCA ATTTATTGTA
+		AACGATAGCA ATTTATTGTA
+		AACGATAGCA ATTTATTGTA
+		AACGATAGCA ATTTATTGTA
+		AACGATAGCA ATTTATTGTA
+		AACGATAGCA ATTTATTGTA
+		AACGATAGCA ATTTATTGTA
+		"""
+		self.name = 'test_phylip'
+
+	def test_parsePhylip(self):
+		lines = textwrap.dedent(self.phylip).split("\n")
+		print phylip2oneliner.parsePhylip(lines, self.name)
+
+		pass
+
+
+if __name__ == '__main__':
+	suite = unittest.TestLoader().loadTestsFromTestCase(TestPhylip2OnelinerFunctions)
+	unittest.TextTestRunner(verbosity=3).run(suite)
