@@ -7,7 +7,6 @@ import platform
 import unittest
 import itertools
 import StringIO
-import argparse
 import numpy as np
 from mrjob.job import MRJob
 from copy import copy, deepcopy
