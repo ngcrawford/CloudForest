@@ -404,16 +404,16 @@ def print_taxa(args):
     else:
         fin = open(args.input_file,'rU')
 
-for count, line in enumerate(fin):
-        if count == 1:
-            tree = line.split('\t')[-1].split("=")[-1]
-            taxa = getTaxa(tree)
-            taxa.sort()
-            taxa.pop(0) # remove
-            for taxon_count, taxon in enumerate(taxa, 1):
-                print taxon
-            print "---------\n", taxon_count, 'total taxa.'
-            break
+    for count, line in enumerate(fin):
+            if count == 1:
+                tree = line.split('\t')[-1].split("=")[-1]
+                taxa = getTaxa(tree)
+                taxa.sort()
+                taxa.pop(0) # remove
+                for taxon_count, taxon in enumerate(taxa, 1):
+                    print taxon
+                print "---------\n", taxon_count, 'total taxa.'
+                break
 
 def main():
     args = interface()
