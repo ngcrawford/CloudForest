@@ -276,7 +276,7 @@ class ProcessPhyloData(MRJob):
         """Take lines and duplicate them the number of times
         specified by the --bootreps flag."""
         # line = line.split("\t")[1].strip("\"") 
-        reps = self.options.bootreps2run
+        reps = self.options.bootreps2run + 1
         while reps != 0: 
             yield reps, line
             reps -= 1
