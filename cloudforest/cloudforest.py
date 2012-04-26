@@ -1,3 +1,12 @@
+import os
+import glob
+import platform
+import tempfile
+import itertools
+import numpy as np
+from copy import copy, deepcopy
+from subprocess import Popen, PIPE
+
 class Process():
     """ """
     def __init__(self):

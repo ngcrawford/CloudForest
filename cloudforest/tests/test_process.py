@@ -1,5 +1,5 @@
 import unittest
-from cloudforest.process import ProcessPhyloData
+from cloudforest.cloudforest_emr import ProcessPhyloData
 
 class TestCloudForestFunctions(unittest.TestCase):
 
