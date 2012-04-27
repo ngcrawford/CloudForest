@@ -19,7 +19,7 @@
 #
 # Requirements:     PHYML v. 3.0. (http://www.atgc-montpellier.fr/phyml/) needs
 #                   to be installed!
- $PHYML = "phyml";	#  Optionally, specify the full PATH to phyml here
+# $PHYML = "bin/PhyML3OSX";	#  Optionally, specify the full PATH to phyml here
 #
 # Version history:  Version 1.0 Oct 2004.
 #                   Version 1.1 Nov 2004: Branch lengths are now
@@ -92,11 +92,11 @@ if ($debugLevel > 0) {
 	open DEBUG, '>', "$debugFile";
 }
 
-my ($help, $infilename, $output, $mt);
+my ($help, $infilename, $output, $PHYML, $mt);
  
 #-- prints usage if no command line parameters are passed or there is an unknown
 #   parameter or help option is passed
-usage() if ( @ARGV < 1 or ! GetOptions('help|h' => \$help, 'infile=s' => \$infilename, 'output_dir=s' => \$output, 'modeltest' => \$mt) or defined $help );
+usage() if ( @ARGV < 1 or ! GetOptions('help|h' => \$help, 'infile=s' => \$infilename, 'output_dir=s' => \$output, 'phyml=s' => \$PHYML, 'modeltest' => \$mt) or defined $help );
          
 if ($mt) {
     $useModeltest = TRUE;
@@ -115,7 +115,7 @@ if (! $output) {
 sub usage
 {
   print "Unknown option: @_\n" if ( @_ );
-  print "usage: modeltest [--infile INFILE] [--output_dir DIR] [--modeltest] [--help|-h]\n";
+  print "usage: modeltest [--infile INFILE] [--output_dir DIR] [--phyml PHYML] [--modeltest] [--help|-h]\n";
   exit;
 }
 
