@@ -13,13 +13,12 @@ Description:
 
 import os
 import re
-import sys
 import shutil
 import platform
 import tempfile
 import subprocess
 
-import pdb
+#import pdb
 
 
 class Phyml:
@@ -27,7 +26,7 @@ class Phyml:
     def __init__(self, phylip, pth='bin', exe=None):
         self.phylip = os.path.abspath(os.path.expanduser(phylip))
         self.phyml3 = self._get_phyml_pth(pth, exe)
-        # model parameters borrowed from John Nylander's excellent mr_aic.pl
+        # model parameters taken from John Nylander's excellent mr_aic.pl
         # http://www.abc.se/~nylander/
         self.models = {
                 'JC69': "+\nM\nM\nM\nM\nM\nR\nY\n",
@@ -95,9 +94,6 @@ class Phyml:
             phyml3 = os.path.join(pth, exe)
         return phyml3
 
-    def run(self, phylip, model='GTR'):
-        pass
-
     def _get_taxon_and_char_data(self, regex):
         """parse the first line of a phylip file and return nchar and ntax"""
         # get taxon and character data for file
@@ -118,7 +114,7 @@ class Phyml:
             raise ValueError("No Log-likelihood found")
         return float(result.groups()[0])
 
-    def _get_aic_tree(self, treefile):
+    def _get_tree(self, treefile):
         """return the tree produced for a given subs. model"""
         tree = None
         #treefile = ''.join([phylip, '_phyml_tree.txt'])
@@ -129,9 +125,10 @@ class Phyml:
 
     def _compute_aicc(self, model, loglik, count_branches=True):
         """
-        AICc is -2lnL + 2K + 2K(K+1)/n-K-1. We're not worried about
-        AIC, since AICc > AIC with larger samples, and BIC doesn't seem as sensible
-        beacause it mixes ML and Bayesian paradigms
+        AICc: -2lnL + 2K + 2K(K+1)/n-K-1.
+
+        we're not worried about AIC, since AICc > AIC with larger samples, and
+        BIC doesn't seem as sensible beacause it mixes ML and Bayesian paradigms
         """
         if count_branches:
             params = self.numparams[model] + self.nbranch
@@ -139,7 +136,19 @@ class Phyml:
             params = self.numparams[model]
         return -2. * loglik + 2. * params + ((2. * params * (params + 1.)) / (self.nchar - params - 1.))
 
-    def best_model(self):
+    def _runner(self, phylip, model):
+        """given alignment and model, run phyml"""
+        template = "%s\n%s" % (phylip, model)
+        cli = [self.phyml3]
+        subprocess.Popen(
+                cli,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE
+            ).communicate(input=template)
+        statfile, treefile = [''.join([phylip, ext]) for ext in ['_phyml_stats.txt', '_phyml_tree.txt']]
+        return statfile, treefile
+
+    def best_model(self, aicc=False):
         """compute the best model for an alignment using AICc"""
         # compile this once
         ll_regex = re.compile("Log-likelihood:\s+(.+)")
@@ -156,32 +165,52 @@ class Phyml:
         # out files after computing aicc.
         shutil.copyfile(self.phylip, os.path.basename(self.phylip))
         self._get_taxon_and_char_data(dim_regex)
-        for model, template in self.models.iteritems():
+        for model_name, model in self.models.iteritems():
             phylip = os.path.basename(self.phylip)
-            template = "%s\n%s" % (phylip, template)
-            cli = [self.phyml3]
-            subprocess.Popen(
-                    cli,
-                    stdin=subprocess.PIPE,
-                    stdout=subprocess.PIPE
-                ).communicate(input=template)
-            statfile, treefile = [''.join([phylip, ext]) for ext in ['_phyml_stats.txt', '_phyml_tree.txt']]
+            # self._runner generates out phyml locus and model template
+            statfile, treefile = self._runner(phylip, model)
             lnl = self._get_log_like(statfile, ll_regex, phylip)
-            aicc = self._compute_aicc(model, lnl)
-            tree = self._get_aic_tree(treefile)
-            results[aicc] = [model, tree]
+            aicc = self._compute_aicc(model_name, lnl)
+            tree = self._get_tree(treefile)
+            results[aicc] = [model_name, tree]
+            # need to delete files individually, because names are same on next iter
             [os.remove(f) for f in [statfile, treefile]]
         os.chdir(cwd)
         shutil.rmtree(working)
         # best is min(AICc)
         best = min(results.keys())
-        return results[best][0], results[best][1]
+        if not aicc:
+            return results[best][0], results[best][1]
+        else:
+            return results
 
-
-def main():
-    phyml = Phyml('tests/alignments/phylip_primates/chr1_1036.phylip', '../../binaries')
-    phyml.best_model()
+    def run(self, model='GTR'):
+        """
+        compute the tree for an alignment given a subs model.  tree output here is identical
+        to that from best_model(return_tree=True), except that we jump right to optimum here
+        """
+        cwd = os.getcwd()
+        # create tempdir to hold phyml output and move there
+        working = tempfile.mkdtemp(dir='tmp')
+        os.chdir(working)
+        # copy over phylip file for locus
+        shutil.copyfile(self.phylip, os.path.basename(self.phylip))
+        phylip = os.path.basename(self.phylip)
+        # run phyml
+        statfile, treefile = self._runner(phylip, self.models[model])
+        # get tree
+        tree = self._get_tree(treefile)
+        # move back to cwd and delete temp dir
+        os.chdir(cwd)
+        shutil.rmtree(working)
+        return tree
 
 
 if __name__ == '__main__':
-    main()
+    import pdb
+    phyml = Phyml('tests/alignments/phylip_primates/chr1_1036.phylip', '../../binaries')
+    best = phyml.best_model()
+    print "best model is ", best
+    tree = phyml.run(best)
+    print "best tree is ", tree
+    pdb.set_trace()
