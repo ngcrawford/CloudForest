@@ -1,13 +1,13 @@
 import os
+import re
 import glob
 import platform
 import tempfile
-import itertools
 import numpy as np
-from copy import copy, deepcopy
 from subprocess import Popen, PIPE
 
 import pdb
+
 
 class Process():
     """ """
@@ -107,12 +107,17 @@ class Process():
         name = ','.join(['='.join([pair[0], pair[1]]) for pair in sorted(args_dict.items())])
         return name
 
-    def processStatsFile(self, fin):
-        lnL = None
+    def process_stats_file(self, fin):
+        """"given an input phyml stats file, return the log-likelihood of the tree"""
+        result = None
+        regex = re.compile("Log-likelihood:\s+(.+)")
         for line in fin:
-            if 'Log-likelihood' in line:
-                lnL = line.split()[-1]
-        return lnL
+            result = regex.search(line)
+            if result:
+                break
+        if result is None:
+            raise ValueError("No Log-likelihood found")
+        return float(result.groups()[0])
 
     def split_oneliner(self, line, args_dict={}, return_locus=False):
         """From a oneline, split locus/taxon info into dict and locus into string
