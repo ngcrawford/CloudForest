@@ -34,9 +34,9 @@ class TestCloudForestFunctions(unittest.TestCase):
         # here.
         expected = self.prep_oneliner_array()
         taxa, align = self.p.onelinerAlignment2Array(expected)
-        bs, choices = self.p.bootstrap(align, 1, 0, True)
+        bs, choices = self.p.get_bootstraps(align, return_choices=True)
         for k, aln in enumerate(bs):
-            assert (bs[0][k] == align[choices[k]]).all()
+            assert (bs[k] == align[choices[k]]).all()
 
     def prep_oneliner_array(self):
         locus = self.one.strip().split(';')

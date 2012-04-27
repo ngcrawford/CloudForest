@@ -26,52 +26,30 @@ class Process():
             alignment += '%-10s%s\n' % (taxa_name, seq)
         return alignment
 
-    def bootstrap(self, sample, replicates, start, keep=False):
-        """bootstrap(initial_sample, replicates=10)
+    def get_bootstraps(self, sample, replicates=1, return_choices=False):
+        """Create boostrapped replicates of an a numpy array.
 
-        Create boostrapped replicates of an a numpy array.  Results
-        are returned in a python list.
+        Returns list
 
-        Parameters
-        ----------
-        sample : array_like
-            An array, any object exposing the array interface, an
-            object whose __array__ method returns an array, or any
-            (nested) sequence. 
-
-        replicates : int
-            The number of bootstrap replicates to produce.
-
-        Examples
-        --------
-        >>> bootstrap(array([1,2,3,4,5]),5)
-        [array([1, 5, 1, 2, 2]),
-         array([1, 5, 1, 4, 2]),
-         array([2, 2, 2, 4, 4]),
-         array([2, 2, 4, 4, 2]),
-         array([2, 4, 3, 3, 3])]
         """
-        replicates = int(replicates)
-        sample_size = len(sample)
-        c = []
-        bootstrap_replicates = []
-        for boot_rep_num in range(start,start+replicates):
-            choices = np.random.random_integers(0, sample_size-1, sample_size)  # generate index array of random choices
-            if keep:
-                c.append(choices)
-            if type(sample) == list:
-                boot_rep = []
-                for choice in choices:
-                    element = deepcopy(sample[choice])
-                    boot_rep.append(sample[choice])
+        if not isinstance(sample, np.ndarray):
+            try:
+                sample = np.array(sample)
+            except:
+                raise TypeError("bootstrap() input must be list or numpy.ndarray")
+        #replicates = int(replicates)
+        size = len(sample)
+        if replicates == 1:
+            choices = np.random.random_integers(0, size - 1, size)
+            if not return_choices:
+                return sample[choices].tolist()
             else:
-                boot_rep = sample[choices]
+                return sample[choices].tolist(), choices
 
-            bootstrap_replicates.append(boot_rep)
-        if not keep:
-            return bootstrap_replicates
         else:
-            return bootstrap_replicates, choices
+            return [sample[np.random.random_integers(0, size - 1, size)].tolist()
+                            for i in xrange(replicates)]
+
 
     def onelinerAlignment2Array(self, line):
         """Convert oneliner to 2d numpy array."""
@@ -232,7 +210,7 @@ class Process():
         # EXECUTE MR-AIC (AIC output only)            
         cli = "%s --infile=%s --output_dir=%s >/dev/null 2>&1" % \
             (os.path.join(bin, 'mraic_mod.pl'), temp_in.name, temp_dir)
-        pdb.set_trace()        
+        #pdb.set_trace()        
         cli_parts = cli.split()
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
                 
