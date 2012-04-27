@@ -236,17 +236,17 @@ class Process():
                                # 'oneliner' suitable for bootstrapping
         '''
       
-    def duplicateOneliners(self, key, line, bootreps=500):
+    def duplicate_oneliner(self, key, line, bootreps=500):
         """Take lines and duplicate them the number of times
         specified by the --bootreps flag."""
         # line = line.split("\t")[1].strip("\"") 
         try:
-            reps = self.options.bootreps2run + 1
+            reps = self.options.bootreps2run
         except AttributeError:
-            reps = bootreps + 1
-        while reps != 0: 
-            yield reps, line
-            reps -= 1
+            reps = bootreps
+        for i in reversed(xrange(1, reps + 1)):
+            yield i, line
+
           
     def lines2Oneliner(self, key, line):
         """Convert multiple alignments with the same key
