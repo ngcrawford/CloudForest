@@ -67,7 +67,7 @@ class TestCloudForestFunctions(unittest.TestCase):
     def test_process_oneliner_data(self):
         # send single oneliner
         expected = {'chrm': 'chr1_1036'}
-        observed = self.p.processOnelinerData(self.one, {})
+        observed = self.p.split_one_liner(self.one, {})
         assert observed == expected
 
     def test_duplicate_oneliners(self):

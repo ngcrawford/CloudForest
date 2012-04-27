@@ -106,7 +106,7 @@ class Process():
                 oneliner = self.array2OnelinerAlignment(taxa, shuffled)         # back to oneliner
                 oneliner = "%s:%s" % (self.makeTreeName(args_dict), oneliner)
                 yield key, oneliner
-    
+
     def make_tree_name(self, args_dict):
         """Converts dictionary of arguement into a sorted string with the
         format:  """
@@ -115,22 +115,28 @@ class Process():
         name = ','.join(['='.join([pair[0], pair[1]]) for pair in sorted(args_dict.items())])
         return name
 
-    
     def processStatsFile(self, fin):
         lnL = None
         for line in fin:
             if 'Log-likelihood' in line:
                 lnL = line.split()[-1]
         return lnL
-        
-    def processOnelinerData(self, line, args_dict):
-        args, align = line.split(":")
+
+    def split_one_liner(self, line, args_dict={}, return_locus=False):
+        """From a oneline, split locus/taxon info into dict and locus into string
+
+        Returns dict or tuple(dict, locus)
+
+        """
+        args, locus = line.split(":")
         args = args.split(',')
         for item in args:
             dict_key, value = item.split("=")
             args_dict[dict_key] = value
-        
-        return args_dict
+        if not return_locus:
+            return args_dict
+        else:
+            return args_dict, locus
 
         
     def phyml(self, key, line):
