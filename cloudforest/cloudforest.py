@@ -14,13 +14,14 @@ class Process():
     def __init__(self):
         pass
 
-    def oneliner2phylip(self, line):
+    def oneliner_to_phylip(self, line):
         """Convert one-liner to phylip format."""
         seqs = line.strip(";").split(',')
-        label_seqs = zip(seqs[:-1:2],seqs[1::2])
+        label_seqs = zip(seqs[:-1:2], seqs[1::2])
         taxa_count = len(label_seqs)
         seq_length = len(label_seqs[0][1])
-        alignment = "%s %s\n" % (taxa_count, seq_length) # add header
+        # add header
+        alignment = "%s %s\n" % (taxa_count, seq_length)
         for taxa_name, seq in label_seqs:
             taxa_name = taxa_name.strip()
             alignment += '%-10s%s\n' % (taxa_name, seq)
