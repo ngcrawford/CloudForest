@@ -33,7 +33,7 @@ class TestCloudForestFunctions(unittest.TestCase):
         # and just checking to make sure we re-order according to sample
         # here.
         expected = self.prep_oneliner_array()
-        taxa, align = self.p.onelinerAlignment2Array(expected)
+        taxa, align = self.p.oneliner_to_array(expected)
         bs, choices = self.p.get_bootstraps(align, return_choices=True)
         for k, aln in enumerate(bs):
             assert (bs[k] == align[choices[k]]).all()
@@ -47,14 +47,14 @@ class TestCloudForestFunctions(unittest.TestCase):
         exp_taxa = ['MusMuscu', 'GorGoril', 'PanTrogl']
         exp_align = cPickle.load(open('pickles/expected_align_to_array.pickle'))
         locus = self.prep_oneliner_array()
-        obs_taxa, obs_align = self.p.onelinerAlignment2Array(locus)
+        obs_taxa, obs_align = self.p.oneliner_to_array(locus)
         assert obs_taxa == exp_taxa
         # comparing arrays
         assert (obs_align == exp_align).all()
 
     def test_array_to_oneliner(self):
         expected = self.prep_oneliner_array()
-        taxa, align = self.p.onelinerAlignment2Array(expected)
+        taxa, align = self.p.oneliner_to_array(expected)
         observed = self.p.array2OnelinerAlignment(taxa, align)
         assert observed == expected
 

@@ -50,21 +50,19 @@ class Process():
             return [sample[np.random.random_integers(0, size - 1, size)].tolist()
                             for i in xrange(replicates)]
 
+    def oneliner_to_array(self, line):
+        """Convert oneliner to 2d numpy array.
 
-    def onelinerAlignment2Array(self, line):
-        """Convert oneliner to 2d numpy array."""
+        Returns tuple(list, array)
+
+        """
         seqs = line.split(",")
-        label_seqs = zip(seqs[:-1:2],seqs[1::2])
-        taxa = []
-        bases = []
+        label_seqs = zip(seqs[:-1:2], seqs[1::2])
+        taxa, bases = [], []
         for taxon, seq in label_seqs:
-            seq_list = copy([seq[count] for count, item in enumerate(seq)])
-            seq_array = np.array(seq_list)
-            bases.append(seq_array)
-            taxon = taxon.strip()
-            taxa.append(taxon)
-        bases = np.array(bases)
-        return (taxa, bases)
+            bases.append(list(seq))
+            taxa.append(taxon.strip())
+        return taxa, np.array(bases)
 
     def array2OnelinerAlignment(self, taxa, bases):
         """Convert array of array of taxa and an array of bases to one-liner."""
