@@ -107,15 +107,14 @@ class Process():
                 oneliner = "%s:%s" % (self.makeTreeName(args_dict), oneliner)
                 yield key, oneliner
     
-    def makeTreeName(self, args_dict):
+    def make_tree_name(self, args_dict):
         """Converts dictionary of arguement into a sorted string with the
         format:  """
-        name = ""
-        for pair in sorted(args_dict.items()):
-            pair = [str(pair[0]), str(pair[1])]
-            name += '='.join(pair) + ","
+        # join is faster and cleaner than concatenate
+        # list comp is faster than for
+        name = ','.join(['='.join([pair[0], pair[1]]) for pair in sorted(args_dict.items())])
+        return name
 
-        return "" + name.strip(",") + ""
     
     def processStatsFile(self, fin):
         lnL = None

@@ -60,7 +60,7 @@ class TestCloudForestFunctions(unittest.TestCase):
 
     def test_make_tree_name(self):
         d = {'chrm': 'chr1_1036'}
-        observed = self.p.makeTreeName(d)
+        observed = self.p.make_tree_name(d)
         expected = 'chrm=chr1_1036'
         assert observed == expected
 
@@ -73,7 +73,7 @@ class TestCloudForestFunctions(unittest.TestCase):
     def test_duplicate_oneliners(self):
         locus = self.prep_oneliner_array()
         d = {'chrm': 'chr1_1036'}
-        tree_name = self.p.makeTreeName(d)
+        tree_name = self.p.make_tree_name(d)
         oneliner = "%s:%s" % (tree_name, locus)
         expected = [(r, oneliner) for r in range(1, 7)[::-1]]
         dupes = self.p.duplicateOneliners(1, oneliner, 5)
