@@ -77,36 +77,27 @@ class Process():
         oneliner = ','.join([','.join([taxa[count], seq.tostring()]) for count, seq in enumerate(bases)])
         return oneliner
 
-    def bootstrapReplicates(self, key, line):
-        """ This fuction is slightly different than the standard bootstrapping fuction:
-        
-        Rather that producing all the bootstrap replicates in one process, it takes a file
-        of duplicated datasets equal to the number of replicates. One boostrap replicate is
-        produced from the loci within each dataset, and one bootstap replicate is made on
-        each locus of the bootstrapped loci. This speeds up the MapReduce algorithm 
-        by parallelizing the bootstrapping opperation.
-        
-        This fuction also keeps the appropriate model of molecular evolution associated 
-        with each locus.
-        """
-        
+    def make_bootstrap_replicates(self, key, line):
         loci = line.strip().split(';')
-        loci = loci[:-1]                                 # remove empty cell due to trailing ";" 
-        bootstapped_loci = self.bootstrap(loci, 1, 0)    # first bootstrap the loci
-        for bcount, bootrep in enumerate(bootstapped_loci):                 
-            for lcount, locus in enumerate(bootrep):
-                args_dict = {}
-                args_dict['model'] = 'HKY85'
-                args_dict = self.processOnelinerData(locus, args_dict)          # overwrite model
-                model = args_dict['model']
-                model, locus = locus.split(":")
-                taxa, numpy_alignment = self.onelinerAlignment2Array(locus)     # convert loci to 2d arrays
-                bases_by_col = np.column_stack(numpy_alignment)                 # transpose so columns are bootstapped   
-                shuffled = self.bootstrap(bases_by_col, 1, 0)                   # generate one replicate of bootstrapped columns
-                shuffled = np.column_stack(shuffled[0])                         # transpose back to rows of sequences
-                oneliner = self.array2OnelinerAlignment(taxa, shuffled)         # back to oneliner
-                oneliner = "%s:%s" % (self.makeTreeName(args_dict), oneliner)
-                yield key, oneliner
+        loci = loci[:-1]
+        # first, bootstrap across loci
+        multilocus_bstrap = self.get_bootstraps(loci)
+        # second, bootstrap bases within loci
+        for locus in multilocus_bstrap:
+            # split keys from alignments
+            args_dict, locus = self.split_one_liner(locus, return_locus=True)
+            # convert alignments to arrays
+            taxa, numpy_alignment = self.oneliner_to_array(locus)
+            # transpose so we bootstrap by columns
+            bases_by_col = np.column_stack(numpy_alignment)
+            # bootstrap by columns
+            shuffled = self.get_bootstraps(bases_by_col)
+            # transpose back to rows of sequences
+            shuffled = np.column_stack(shuffled)
+            # convert back to oneliner
+            oneliner = self.array_to_oneliner(taxa, shuffled)
+            oneliner = "%s:%s" % (self.make_tree_name(args_dict), oneliner)
+            yield key, oneliner
 
     def make_tree_name(self, args_dict):
         """Converts dictionary of arguement into a sorted string with the
