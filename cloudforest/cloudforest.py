@@ -64,12 +64,16 @@ class Process():
             taxa.append(taxon.strip())
         return taxa, np.array(bases)
 
-    def array2OnelinerAlignment(self, taxa, bases):
-        """Convert array of array of taxa and an array of bases to one-liner."""
-        oneliner = ''
-        for count, seq in enumerate(bases):
-            oneliner += taxa[count]+","+''.join(itertools.chain(bases[count])) + ","
-        oneliner = oneliner[:-1]
+    def array_to_oneliner(self, taxa, bases):
+        """Convert array of array of taxa and an array of bases to one-liner.
+
+        Returns string
+
+        """
+        # join is faster and cleaner than concatenate
+        # list comp is faster than for
+        # enumerate gets index of taxon from taxa
+        oneliner = ','.join([','.join([taxa[count], seq.tostring()]) for count, seq in enumerate(bases)])
         return oneliner
 
     def bootstrapReplicates(self, key, line):

@@ -55,7 +55,7 @@ class TestCloudForestFunctions(unittest.TestCase):
     def test_array_to_oneliner(self):
         expected = self.prep_oneliner_array()
         taxa, align = self.p.oneliner_to_array(expected)
-        observed = self.p.array2OnelinerAlignment(taxa, align)
+        observed = self.p.array_to_oneliner(taxa, align)
         assert observed == expected
 
     def test_make_tree_name(self):
