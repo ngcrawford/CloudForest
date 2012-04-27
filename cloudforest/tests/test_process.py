@@ -20,10 +20,10 @@ class TestCloudForestFunctions(unittest.TestCase):
             makes the appropriate number of trees.
         """
         
-        test_data = open('tests/alignments/3.oneliners','rU')
+        test_data = open('alignments/3.oneliners','rU')
         mr_job = ProcessPhyloData(['-r', 'local', '--setup-cmd', 
                                     'mkdir -p tmp','--gene-trees',
-                                    '--archive=gzips/osx.phylo.tar.gz#bin',
+                                    '--archive=../gzips/osx.phylo.tar.gz#bin',
                                     "-"])
     
         mr_job.sandbox(stdin=test_data)
@@ -43,11 +43,11 @@ class TestCloudForestFunctions(unittest.TestCase):
             command set calculates the correct evolutionary models.
         """
         
-        test_data = open('tests/alignments/3.oneliners','rU')
+        test_data = open('alignments/3.oneliners','rU')
         mr_job = ProcessPhyloData(['-r', 'local', '--setup-cmd', 
                                     'mkdir -p tmp','--gene-trees',
                                     '--mraic',
-                                    '--archive=gzips/osx.phylo.tar.gz#bin',
+                                    '--archive=../gzips/osx.phylo.tar.gz#bin',
                                     "-"])
     
         mr_job.sandbox(stdin=test_data)
@@ -72,12 +72,12 @@ class TestCloudForestFunctions(unittest.TestCase):
     def test_Bootstrapping(self):
         """Tests that bootstraps produces the correct number or replicates"""
 
-        test_data = open('tests/alignments/3.oneliners','rU')
+        test_data = open('alignments/3.oneliners','rU')
         mr_job = ProcessPhyloData(['-r', 'local', 
                                     '--setup-cmd', 'mkdir -p tmp',
                                     '--full-analysis',
                                     '--bootreps=5',
-                                    '--archive=gzips/osx.phylo.tar.gz#bin',
+                                    '--archive=../gzips/osx.phylo.tar.gz#bin',
                                     "-"])
     
         mr_job.sandbox(stdin=test_data)
