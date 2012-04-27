@@ -122,7 +122,7 @@ class Process():
                 lnL = line.split()[-1]
         return lnL
 
-    def split_one_liner(self, line, args_dict={}, return_locus=False):
+    def split_oneliner(self, line, args_dict={}, return_locus=False):
         """From a oneline, split locus/taxon info into dict and locus into string
 
         Returns dict or tuple(dict, locus)
