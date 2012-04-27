@@ -7,6 +7,8 @@ import numpy as np
 from copy import copy, deepcopy
 from subprocess import Popen, PIPE
 
+import pdb
+
 class Process():
     """ """
     def __init__(self):
@@ -24,7 +26,7 @@ class Process():
             alignment += '%-10s%s\n' % (taxa_name, seq)
         return alignment
 
-    def bootstrap(self, sample, replicates, start):
+    def bootstrap(self, sample, replicates, start, keep=False):
         """bootstrap(initial_sample, replicates=10)
 
         Create boostrapped replicates of an a numpy array.  Results
@@ -51,10 +53,12 @@ class Process():
         """
         replicates = int(replicates)
         sample_size = len(sample)
-
+        c = []
         bootstrap_replicates = []
         for boot_rep_num in range(start,start+replicates):
             choices = np.random.random_integers(0, sample_size-1, sample_size)  # generate index array of random choices
+            if keep:
+                c.append(choices)
             if type(sample) == list:
                 boot_rep = []
                 for choice in choices:
@@ -64,7 +68,10 @@ class Process():
                 boot_rep = sample[choices]
 
             bootstrap_replicates.append(boot_rep)
-        return bootstrap_replicates
+        if not keep:
+            return bootstrap_replicates
+        else:
+            return bootstrap_replicates, choices
 
     def onelinerAlignment2Array(self, line):
         """Convert oneliner to 2d numpy array."""
@@ -203,9 +210,8 @@ class Process():
         else:
             yield key, tree
     
-    def mrAIC(self, key, line):
-        """ Run mr-aic.pl on the each one-liner in the input file."""
-                
+    def mrAIC(self, key, line, bin='bin'):
+        """ Run mr-aic.pl on the each one-liner in the input file."""     
         oneliner = line.split("\t")[-1]     # weirdness parsing key, value
 
         # PARSE EXTRA ALIGNMENT INFO
@@ -220,14 +226,13 @@ class Process():
         temp_in = tempfile.NamedTemporaryFile(suffix='.out', dir='tmp/')
         for line in phylip:
             temp_in.write(line)
-        temp_in.seek(0) 
-                
+        temp_in.seek(0)          
         temp_dir = os.path.dirname(temp_in.name)
                 
         # EXECUTE MR-AIC (AIC output only)            
         cli = "%s --infile=%s --output_dir=%s >/dev/null 2>&1" % \
-            (os.path.join("bin", 'mraic_mod.pl'), temp_in.name, temp_dir)
-                
+            (os.path.join(bin, 'mraic_mod.pl'), temp_in.name, temp_dir)
+        pdb.set_trace()        
         cli_parts = cli.split()
         ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
                 
@@ -235,8 +240,8 @@ class Process():
         aic_file = glob.glob("tmp/%s.AICc-*tre*" % os.path.basename(temp_in.name))[0]
         aic_model = aic_file.split('.')[-2].split("-")[-1]
         args_dict['model'] = aic_model
-        oneliner = "%s:%s" % (self.makeTreeName(args_dict), oneliner.split(":")[-1])
-                
+        oneliner = "%s:%s" % (self.makeTreeName(args_dict), oneliner.split(":")[-1])       
+        '''
         if self.options.gene_trees == True:
             aic_fin = open(aic_file,'rU')
             for line in aic_fin:
@@ -244,12 +249,16 @@ class Process():
         else:
             yield 1, oneliner  # give everything the same key so it can be reduced to a 
                                # 'oneliner' suitable for bootstrapping
+        '''
       
-    def duplicateOneliners(self, key, line):
+    def duplicateOneliners(self, key, line, bootreps=500):
         """Take lines and duplicate them the number of times
         specified by the --bootreps flag."""
         # line = line.split("\t")[1].strip("\"") 
-        reps = self.options.bootreps2run + 1
+        try:
+            reps = self.options.bootreps2run + 1
+        except AttributeError:
+            reps = bootreps + 1
         while reps != 0: 
             yield reps, line
             reps -= 1
