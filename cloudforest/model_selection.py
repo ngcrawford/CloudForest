@@ -23,61 +23,63 @@ import pdb
 
 
 class Phyml:
-    """ """
+    """Use phyml to generate trees or help select models"""
     def __init__(self, phylip, pth='bin', exe=None):
         self.phylip = os.path.abspath(os.path.expanduser(phylip))
         self.phyml3 = self._get_phyml_pth(pth, exe)
+        # model parameters borrowed from John Nylander's excellent mr_aic.pl
+        # http://www.abc.se/~nylander/
         self.models = {
-                'JC69':"+\nM\nM\nM\nM\nM\nR\nY\n",
-                'JC69I':"+\nM\nM\nM\nM\nM\nV\nY\nR\nY\n",
-                'JC69G':"+\nM\nM\nM\nM\nM\nY\n",
-                'JC69IG':"+\nM\nM\nM\nM\nM\nV\nY\nY\n",
-                'F81':"+\nM\nM\nM\nM\nM\nM\nM\nF\nR\nY\n",
-                'F81I':"+\nM\nM\nM\nM\nM\nM\nM\nF\nV\nY\nR\nY\n",
-                'F81G':"+\nM\nM\nM\nM\nM\nM\nM\nF\nY\n",
-                'F81IG':"+\nM\nM\nM\nM\nM\nM\nM\nF\nV\nY\nY\n",
-                'K2P':"+\nM\nM\nM\nM\nM\nM\nT\nY\nR\nY\n",
-                'K2PI':"+\nM\nM\nM\nM\nM\nM\nT\nY\nR\nV\nY\nY\n",
-                'K2PG':"+\nM\nM\nM\nM\nM\nM\nT\nY\nY\n",
-                'K2PIG':"+\nM\nM\nM\nM\nM\nM\nT\nY\nV\nY\nY\n",
-                'HKY':"+\nF\nT\nY\nR\nY\n",
-                'HKYI':"+\nF\nT\nY\nR\nV\nY\nY\n",
-                'HKYG':"+\nF\nT\nY\nY\n",
-                'HKYIG':"+\nF\nT\nY\nV\nY\nY\n",
-                'SYM':"+\nM\nM\nM\nM\nE\n0.25\n0.25\n0.25\n0.25\nK\n012345\n1.00\n1.00\n1.00\n1.00\n1.00\n1.00\nR\nY\n",
-                'SYMI':"+\nM\nM\nM\nM\nE\n0.25\n0.25\n0.25\n0.25\nK\n012345\n1.00\n1.00\n1.00\n1.00\n1.00\n1.00\nR\nV\nY\nY\n",
-                'SYMG':"+\nM\nM\nM\nM\nE\n0.25\n0.25\n0.25\n0.25\nK\n012345\n1.00\n1.00\n1.00\n1.00\n1.00\n1.00\nY\n",
-                'SYMIG':"+\nM\nM\nM\nM\nE\n0.25\n0.25\n0.25\n0.25\nK\n012345\n1.00\n1.00\n1.00\n1.00\n1.00\n1.00\nV\nY\nY\n",
-                'GTR':"+\nM\nM\nM\nF\nR\nY\n",
-                'GTRI':"+\nM\nM\nM\nF\nR\nV\nY\nY\n",
-                'GTRG':"+\nM\nM\nM\nF\nY\n",
-                'GTRIG':"+\nM\nM\nM\nF\nV\nY\nY\n"
+                'JC69': "+\nM\nM\nM\nM\nM\nR\nY\n",
+                'JC69I': "+\nM\nM\nM\nM\nM\nV\nY\nR\nY\n",
+                'JC69G': "+\nM\nM\nM\nM\nM\nY\n",
+                'JC69IG': "+\nM\nM\nM\nM\nM\nV\nY\nY\n",
+                'F81': "+\nM\nM\nM\nM\nM\nM\nM\nF\nR\nY\n",
+                'F81I': "+\nM\nM\nM\nM\nM\nM\nM\nF\nV\nY\nR\nY\n",
+                'F81G': "+\nM\nM\nM\nM\nM\nM\nM\nF\nY\n",
+                'F81IG': "+\nM\nM\nM\nM\nM\nM\nM\nF\nV\nY\nY\n",
+                'K2P': "+\nM\nM\nM\nM\nM\nM\nT\nY\nR\nY\n",
+                'K2PI': "+\nM\nM\nM\nM\nM\nM\nT\nY\nR\nV\nY\nY\n",
+                'K2PG': "+\nM\nM\nM\nM\nM\nM\nT\nY\nY\n",
+                'K2PIG': "+\nM\nM\nM\nM\nM\nM\nT\nY\nV\nY\nY\n",
+                'HKY': "+\nF\nT\nY\nR\nY\n",
+                'HKYI': "+\nF\nT\nY\nR\nV\nY\nY\n",
+                'HKYG': "+\nF\nT\nY\nY\n",
+                'HKYIG': "+\nF\nT\nY\nV\nY\nY\n",
+                'SYM': "+\nM\nM\nM\nM\nE\n0.25\n0.25\n0.25\n0.25\nK\n012345\n1.00\n1.00\n1.00\n1.00\n1.00\n1.00\nR\nY\n",
+                'SYMI': "+\nM\nM\nM\nM\nE\n0.25\n0.25\n0.25\n0.25\nK\n012345\n1.00\n1.00\n1.00\n1.00\n1.00\n1.00\nR\nV\nY\nY\n",
+                'SYMG': "+\nM\nM\nM\nM\nE\n0.25\n0.25\n0.25\n0.25\nK\n012345\n1.00\n1.00\n1.00\n1.00\n1.00\n1.00\nY\n",
+                'SYMIG': "+\nM\nM\nM\nM\nE\n0.25\n0.25\n0.25\n0.25\nK\n012345\n1.00\n1.00\n1.00\n1.00\n1.00\n1.00\nV\nY\nY\n",
+                'GTR': "+\nM\nM\nM\nF\nR\nY\n",
+                'GTRI': "+\nM\nM\nM\nF\nR\nV\nY\nY\n",
+                'GTRG': "+\nM\nM\nM\nF\nY\n",
+                'GTRIG': "+\nM\nM\nM\nF\nV\nY\nY\n"
             }
         self.numparams = {
-                'JC69':0,
-                'JC69I':1,
-                'JC69G':1,
-                'JC69IG':2,
-                'F81':3,
-                'F81I':4,
-                'F81G':4,
-                'F81IG':5,
-                'K2P':1,
-                'K2PI':2,
-                'K2PG':2,
-                'K2PIG':3,
-                'HKY':4,
-                'HKYI':5,
-                'HKYG':5,
-                'HKYIG':6,
-                'SYM':5,
-                'SYMI':6,
-                'SYMG':6,
-                'SYMIG':7,
-                'GTR':8,
-                'GTRI':9,
-                'GTRG':9,
-                'GTRIG':10
+                'JC69': 0,
+                'JC69I': 1,
+                'JC69G': 1,
+                'JC69IG': 2,
+                'F81': 3,
+                'F81I': 4,
+                'F81G': 4,
+                'F81IG': 5,
+                'K2P': 1,
+                'K2PI': 2,
+                'K2PG': 2,
+                'K2PIG': 3,
+                'HKY': 4,
+                'HKYI': 5,
+                'HKYG': 5,
+                'HKYIG': 6,
+                'SYM': 5,
+                'SYMI': 6,
+                'SYMG': 6,
+                'SYMIG': 7,
+                'GTR': 8,
+                'GTRI': 9,
+                'GTRG': 9,
+                'GTRIG': 10
             }
 
     def _get_phyml_pth(self, pth, exe):
@@ -96,7 +98,16 @@ class Phyml:
     def run(self, phylip, model='GTR'):
         pass
 
+    def _get_taxon_and_char_data(self, regex):
+        """parse the first line of a phylip file and return nchar and ntax"""
+        # get taxon and character data for file
+        first_line = open(self.phylip, 'rU').readline()
+        self.taxa, self.nchar = [int(val) for val in regex.search(first_line).groups()]
+        # calculate to keep results comparable to mr_aic.pl
+        self.nbranch = (2 * self.taxa) - 3
+
     def _get_log_like(self, statfile, regex, phylip):
+        """"given an input phyml stats file, return the log-likelihood of the tree"""
         result = None
         #stats = ''.join([phylip, '_phyml_stats.txt'])
         for line in open(statfile, 'rU'):
@@ -108,6 +119,7 @@ class Phyml:
         return float(result.groups()[0])
 
     def _get_aic_tree(self, treefile):
+        """return the tree produced for a given subs. model"""
         tree = None
         #treefile = ''.join([phylip, '_phyml_tree.txt'])
         tree = open(treefile, 'rU').read().strip()
@@ -116,21 +128,19 @@ class Phyml:
         return tree
 
     def _compute_aicc(self, model, loglik, count_branches=True):
-        """AICc is -2lnL + 2K + 2K(K+1)/n-K-1"""
+        """
+        AICc is -2lnL + 2K + 2K(K+1)/n-K-1. We're not worried about
+        AIC, since AICc > AIC with larger samples, and BIC doesn't seem as sensible
+        beacause it mixes ML and Bayesian paradigms
+        """
         if count_branches:
             params = self.numparams[model] + self.nbranch
         else:
             params = self.numparams[model]
         return -2. * loglik + 2. * params + ((2. * params * (params + 1.)) / (self.nchar - params - 1.))
 
-    def _get_taxon_and_char_data(self, regex):
-        # get taxon and character data for file
-        first_line = open(self.phylip, 'rU').readline()
-        self.taxa, self.nchar = [int(val) for val in regex.search(first_line).groups()]
-        self.nbranch = (2 * self.taxa) - 3
-        self.max_params = self.nbranch + 10
-
-    def select_model(self):
+    def best_model(self):
+        """compute the best model for an alignment using AICc"""
         # compile this once
         ll_regex = re.compile("Log-likelihood:\s+(.+)")
         dim_regex = re.compile("\s*(\d+)\s+(\d+)")
@@ -170,7 +180,7 @@ class Phyml:
 
 def main():
     phyml = Phyml('tests/alignments/phylip_primates/chr1_1036.phylip', '../../binaries')
-    phyml.select_model()
+    phyml.best_model()
 
 
 if __name__ == '__main__':
