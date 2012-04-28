@@ -132,12 +132,14 @@ class Process():
             raise ValueError("No Log-likelihood found")
         return float(result.groups()[0])
 
-    def split_oneliner(self, line, args_dict={}):
+    def split_oneliner(self, line, args_dict=None, default_model=False):
         """From a oneline, split locus/taxon info into dict and locus into string
 
         Returns dict or tuple(dict, locus)
 
         """
+        if not args_dict:
+            args_dict = {}
         if ':' in line:
             args, locus = line.split(":")
             args = args.split(',')
@@ -145,8 +147,10 @@ class Process():
                 dict_key, value = item.split("=")
                 args_dict[dict_key] = value
         else:
-            args_dict['model'] = 'GTR'
             locus = line
+        if default_model:
+            if 'model' not in args_dict.keys():
+                args_dict['model'] = 'GTR'
         return args_dict, locus
 
     def get_genetrees(self, key, line, bin='bin', genetrees=True, no_model=False):
@@ -155,7 +159,7 @@ class Process():
         # TODO:  Why is this here?
         if len(line.split("\t")) == 2:
             key, line = line.split("\t")
-        args_dict, locus = self.split_oneliner(line)
+        args_dict, locus = self.split_oneliner(line, default_model=True)
         phylip = self.oneliner_to_phylip(locus)
         phyml = Phyml(phylip, bin)
         # run phyml.  if no model, defaults to GTR
@@ -207,6 +211,7 @@ class Process():
         to a concatenated oneliner with the same key"""
         concatenated_line = "".join(line)
         yield 1, concatenated_line
+
 
 class Phyml:
     """Use phyml to generate trees or help select models"""
