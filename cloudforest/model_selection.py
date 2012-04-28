@@ -36,6 +36,13 @@ class Phyml:
                     phylip,
                     self.phylip
                     )
+        # if we get a string for a file, write to tempdir/tempfile
+        elif type(phylip) == str:
+            fd, self.phylip = tempfile.mkstemp(dir=self.working, text=True)
+            os.write(fd, phylip)
+            os.close(fd)
+        else:
+            raise TypeError("Input must be a phylip file or a phylip-formatted string")
         self.phyml3 = self._get_phyml_pth(pth, exe)
         # container for model selection results
         self.aicc_results = None
