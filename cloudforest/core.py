@@ -170,7 +170,7 @@ class Process():
             no_model = self.options.mraic_opt
         except:
             gtrees = genetrees
-        if gtrees == True and no_model == None:
+        if gtrees == True and no_model == False:
             yield key, "tree '%s' = [&U] %s" % (self.make_tree_name(args_dict), tree)
         else:
             yield key, tree
