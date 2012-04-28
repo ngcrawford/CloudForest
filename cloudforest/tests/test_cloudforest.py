@@ -91,7 +91,7 @@ class TestProcess(unittest.TestCase):
     def test_phyml(self):
         pass
 
-    def test_get_genetrees_and_models(self):
+    def test_get_genetrees_and_models_for_genetrees(self):
         obs_gen = self.p.get_genetrees_and_models(1, self.one, bin='../binaries', genetrees=True)
         exp_key, exp_tree = cPickle.load(open('pickles/expected_genetrees.pickle'))
         observed = [o for o in obs_gen]
@@ -100,6 +100,15 @@ class TestProcess(unittest.TestCase):
         obs_key, obs_tree = observed
         assert obs_key == exp_key
         assert obs_tree == exp_tree
+
+    def test_get_genetrees_and_models_for_oneliner(self):
+        obs_gen = self.p.get_genetrees_and_models(1, self.one, bin='../binaries', genetrees=False)
+        exp_key, exp_oneliner = cPickle.load(open('pickles/expected_genetree_oneliners.pickle'))
+        observed = [o for o in obs_gen]
+        assert len(observed) == 1
+        obs_key, exp_oneliner = observed[0]
+        assert obs_key == exp_key
+        assert exp_oneliner == exp_oneliner
 
 
 if __name__ == '__main__':

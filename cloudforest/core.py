@@ -208,9 +208,10 @@ class Process():
             yield key, tree
 
     def get_genetrees_and_models(self, key, line, bin='bin', genetrees=True):
-        """"""
+        """Compute genetrees from the best fitting substitution model and return
+        generator of genetrees and/or oneliner with models integrated"""
         # weirdness parsing key, value
-        oneliner = line.split("\t")[-1]
+        oneliner = line.split("\t")[-1].strip('\n')
         # PARSE EXTRA ALIGNMENT INFO
         if ":" in line:
             args_dict = self.split_oneliner(oneliner)
