@@ -69,7 +69,10 @@ class TestProcess(unittest.TestCase):
         # send single oneliner
         expected = {'chrm': 'chr1_1036'}
         observed = self.p.split_oneliner(self.one, {})
-        assert observed == expected
+        # dict
+        assert observed[0] == expected
+        # locus
+        assert observed[1] == self.one.split(':')[1]
 
     def test_duplicate_oneliner(self):
         locus = self.prep_oneliner_array()

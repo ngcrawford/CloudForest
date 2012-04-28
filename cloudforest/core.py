@@ -132,94 +132,52 @@ class Process():
             raise ValueError("No Log-likelihood found")
         return float(result.groups()[0])
 
-    def split_oneliner(self, line, args_dict={}, return_locus=False):
+    def split_oneliner(self, line, args_dict={}):
         """From a oneline, split locus/taxon info into dict and locus into string
 
         Returns dict or tuple(dict, locus)
 
         """
-        args, locus = line.split(":")
-        args = args.split(',')
-        for item in args:
-            dict_key, value = item.split("=")
-            args_dict[dict_key] = value
-        if not return_locus:
-            return args_dict
+        if ':' in line:
+            args, locus = line.split(":")
+            args = args.split(',')
+            for item in args:
+                dict_key, value = item.split("=")
+                args_dict[dict_key] = value
         else:
-            return args_dict, locus
+            args_dict['model'] = 'GTR'
+            locus = line
+        return args_dict, locus
 
-        
-    def phyml(self, key, line):
-        """Run PhyML on each line in the input file. 
-        Parses out evolutionary model if it provided as first word in file
-        and """
-        
-        # USE CORRECT BINARYS
-        if platform.system() == 'Darwin':
-            system = 'OSX_setup'
-            phyml_exe = 'PhyML3OSX'
-        else:
-            system = 'AWS_setup'
-            phyml_exe = 'PhyML3linux32'
-        
+    def get_genetrees(self, key, line, bin='bin', genetrees=True, no_model=False):
+        """Compute genetrees using model in oneliner. Parses out evolutionary
+         model if provided as first word in file.  Otherwise, runs GTR."""
+        # TODO:  Why is this here?
         if len(line.split("\t")) == 2:
             key, line = line.split("\t")
-        
-        # GET MODEL INFO FROM FILE IF AVAILABLE
-        args_dict = {}
-        # set default model
-        args_dict['model'] = 'HKY85'
-        if ":" in line:
-            args_dict = self.split_oneliner(line, args_dict)
-            # convert line to phylip
-            phylip = self.oneliner_to_phylip(line.split(":")[-1])
-        
-        else:
-            phylip = self.oneliner_to_phylip(line) # convert line to phylip
-        
-        # SETUP TEMP FILE
-        temp_in = tempfile.NamedTemporaryFile(suffix='.out', dir='tmp/')
-        for line in phylip:
-            temp_in.write(line)
-        temp_in.seek(0)     # move pointer to beginning of file
-             
-        # RUN PHYML
-        cli = '%s --input=%s --model=%s >/dev/null 2>&1' % \
-            (os.path.join("bin", phyml_exe), temp_in.name, args_dict['model']) 
-            
-        cli_parts = cli.split()
-        ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
-        
-        # EXTRACT RESULTS AND FORMAT AS NEXUS TREES
-        temp_string = os.path.split(temp_in.name)[1].split('.')[0]
-        
-        treefile =  os.path.join('tmp','%s.out_phyml_tree.txt' % (temp_string))
-        tree = open(treefile,'r').readlines()[0].strip().strip("\"")
-        
-        statsfile = os.path.join('tmp','%s.out_phyml_stats.txt' % (temp_string))        
-        lnL = self.processStatsFile(open(statsfile,'r'))
-        args_dict['lnL'] = lnL
-        
-        if self.options.gene_trees == True and self.options.mraic_opt == None:
-            tree = "tree '" + self.makeTreeName(args_dict) + "' = [&U] " + tree
-            yield key, tree
-        
+        args_dict, locus = self.split_oneliner(line)
+        phylip = self.oneliner_to_phylip(locus)
+        phyml = Phyml(phylip, bin)
+        # run phyml.  if no model, defaults to GTR
+        # TOOD: Why do we need LnL?
+        args_dict['lnL'], tree = phyml.run(args_dict['model'])
+        try:
+            gtrees = self.options.gene_trees
+            no_model = self.options.mraic_opt
+        except:
+            gtrees = genetrees
+        if gtrees == True and no_model == None:
+            yield key, "tree '%s' = [&U] %s" % (self.make_tree_name(args_dict), tree)
         else:
             yield key, tree
 
     def get_genetrees_and_models(self, key, line, bin='bin', genetrees=True):
         """Compute genetrees from the best fitting substitution model and return
         generator of genetrees and/or oneliner with models integrated"""
-        # weirdness parsing key, value
+        # TODO: move into separate line_cleaner function?
         oneliner = line.split("\t")[-1].strip('\n')
-        # PARSE EXTRA ALIGNMENT INFO
-        if ":" in line:
-            args_dict = self.split_oneliner(oneliner)
-            # convert line to phylip
-            phylip = self.oneliner_to_phylip(oneliner.split(":")[-1])
-        else:
-            # convert line to phylip
-            phylip = self.oneliner_to_phylip(oneliner)
+        args_dict, locus = self.split_oneliner(line)
+        phylip = self.oneliner_to_phylip(locus)
         phyml = Phyml(phylip, bin)
         model, tree = phyml.best_aicc_model_and_tree()
         args_dict['model'] = model
@@ -236,7 +194,7 @@ class Process():
     def duplicate_oneliner(self, key, line, bootreps=500):
         """Take lines and duplicate them the number of times
         specified by the --bootreps flag."""
-        # line = line.split("\t")[1].strip("\"") 
+        # line = line.split("\t")[1].strip("\"")
         try:
             reps = self.options.bootreps2run
         except AttributeError:
@@ -329,6 +287,8 @@ class Phyml:
                 'GTRG': 9,
                 'GTRIG': 10
             }
+        # compile regex for LnL once
+        self.ll = re.compile("Log-likelihood:\s+(.+)")
 
     def __del__(self):
         """Cleanup empty dir - not guaranteed to be called during execution,
@@ -418,7 +378,6 @@ class Phyml:
     def _best_model_runner(self, return_aicc=False):
         """Compute the best model for an alignment using AICc"""
         # compile this once
-        ll_regex = re.compile("Log-likelihood:\s+(.+)")
         dim_regex = re.compile("\s*(\d+)\s+(\d+)")
         self.aicc_results = {}
         # because of phyml, move to working dir
@@ -428,7 +387,7 @@ class Phyml:
             phylip = os.path.basename(self.phylip)
             # self._runner generates out phyml locus and model template
             statfile, treefile = self._runner(phylip, model)
-            lnl = self._get_log_like(statfile, ll_regex, phylip)
+            lnl = self._get_log_like(statfile, self.ll, phylip)
             aicc = self._compute_aicc(model_name, lnl)
             tree = self._get_tree(treefile)
             self.aicc_results[aicc] = [model_name, tree]
@@ -480,6 +439,8 @@ class Phyml:
             raise KeyError("You must use a valid model: %s" % (','.join(sorted(self.models.keys()))))
         # get tree
         tree = self._get_tree(treefile)
+        # get LnL
+        lnl = self._get_log_like(statfile, self.ll, phylip)
         # move back to cwd
         os.chdir(self.cwd)
-        return tree
+        return lnl, tree
