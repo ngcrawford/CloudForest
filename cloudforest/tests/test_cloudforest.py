@@ -10,6 +10,7 @@ Copyright (c) 2012 Brant C. Faircloth. All rights reserved.
 """
 
 import os
+import copy
 import cPickle
 import unittest
 import numpy as np
@@ -100,12 +101,33 @@ class TestProcess(unittest.TestCase):
         # I'm not entirely sure what this does
         pass
 
-    def test_phyml(self):
-        pass
+    def test_get_genetrees_gtr(self):
+        obs_gen = self.p.get_genetrees(1, self.one, bin='../binaries', genetrees=True)
+        exp_key, exp_tree = cPickle.load(open('pickles/expected_genetrees_gtr.pickle'))
+        observed = [o for o in obs_gen]
+        assert len(observed) == 1
+        observed = observed[0]
+        obs_key, obs_tree = observed
+        assert obs_key == exp_key
+        assert obs_tree == exp_tree
+
+    def test_get_genetrees_hky(self):
+        one_liner = open('alignments/3.oneliners', 'rU').readline()
+        one_liner = copy.deepcopy(self.one).split(':')
+        one_liner[0] += ",model=HKY"
+        one_liner = ':'.join(one_liner)
+        obs_gen = self.p.get_genetrees(1, one_liner, bin='../binaries', genetrees=True)
+        exp_key, exp_tree = cPickle.load(open('pickles/expected_genetrees_hky.pickle'))
+        observed = [o for o in obs_gen]
+        assert len(observed) == 1
+        observed = observed[0]
+        obs_key, obs_tree = observed
+        assert obs_key == exp_key
+        assert obs_tree == exp_tree
 
     def test_get_genetrees_and_models_for_genetrees(self):
         obs_gen = self.p.get_genetrees_and_models(1, self.one, bin='../binaries', genetrees=True)
-        exp_key, exp_tree = cPickle.load(open('pickles/expected_genetrees.pickle'))
+        exp_key, exp_tree = cPickle.load(open('pickles/expected_genetrees_and_model.pickle'))
         observed = [o for o in obs_gen]
         assert len(observed) == 1
         observed = observed[0]
