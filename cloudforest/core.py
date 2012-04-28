@@ -379,6 +379,7 @@ class Phyml:
         """Compute the best model for an alignment using AICc"""
         # compile this once
         dim_regex = re.compile("\s*(\d+)\s+(\d+)")
+        self.lnl_results = {}
         self.aicc_results = {}
         # because of phyml, move to working dir
         os.chdir(self.working)
@@ -388,6 +389,7 @@ class Phyml:
             # self._runner generates out phyml locus and model template
             statfile, treefile = self._runner(phylip, model)
             lnl = self._get_log_like(statfile, self.ll, phylip)
+            self.lnl_results[model_name] = lnl
             aicc = self._compute_aicc(model_name, lnl)
             tree = self._get_tree(treefile)
             self.aicc_results[aicc] = [model_name, tree]
@@ -402,11 +404,12 @@ class Phyml:
         return self.aicc_results[best][0]
 
     def best_aicc_tree(self):
-        """Return best model tree; Do not recompute if models have been run"""
+        """Return best lnl and tree; Do not recompute if models have been run"""
         if not self.aicc_results:
             self._best_model_runner()
         best = min(self.aicc_results.keys())
-        return self.aicc_results[best][1]
+        name = self.aicc_results[best][0]
+        return str(self.lnl_results[name]), self.aicc_results[best][1]
 
     def best_aicc_model_and_tree(self):
         """Return best model and tree; Do not recompute if models have been run"""
@@ -443,4 +446,4 @@ class Phyml:
         lnl = self._get_log_like(statfile, self.ll, phylip)
         # move back to cwd
         os.chdir(self.cwd)
-        return lnl, tree
+        return str(lnl), tree
