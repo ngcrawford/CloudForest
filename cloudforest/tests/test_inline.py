@@ -11,55 +11,28 @@ DATA = ['chrm=chr1_1036,model=GTR:MusMuscu,----TCCTAGCTGAACAGAGAAGGGTGATTAACGATA
  'chrm=chr1_1039,model=HKY:MusMuscu,CATGAAAGGGTTCCAAGATAGAATTTAAATTTAAACTGATTCTTTAGAGATAAGCTTTTTAAAAATCCACCTCTTTGCTTCAAGTCAGGATTTTAAAAAT-AAATTTCCCCTTTAAATCTCTTGAGC-GATTTTCATTTTTTGCAAGG-CCGCACTGCTGGTGTCCTGGAAAAATGGAGAGTTAGGGCTTTATCAGTTGGTGCCCTGAGGTATGTGGCAAAGAAGCTAAATCCTTGAAGATTAGCAAAAAAAAATGCAGCACATGGCAATAAGGGGCTTATATGACTACTAGTGTTAGCTCAGGTGAAAGGAGTATTGCTTATACATAAAACTGGACAAATCCACTGACAATGTATTTTTAGTTAGCTACAAAGGAGTCTTATATTGCCGGACTTTCCCTC--TTTGGTGAATTGCGAAGCTTAGT,GorGoril,CATGAAAGAGTTCCAAGATAGAATTTAAATTTGAACTGATTCTTTATAGATAAGCTTTTTAAAAATCCACCTCTTTGCTTCAAGTCAGGATTTTAAAAAT-AAATTTCCCCTTTAAATCTCTTGAGC-GATTTTCATTTTTTGCAAGG-CCGCACTGCTGGTGTCCTGGAAAAATGGAGAGTTAGAGCTTTATCAGTTGGTGCCCTGAGGTATGTGGCGAAGAAGCTAAATCCTTGAAGATTAACAAAAAAAAATGCAGCACATGGCAATAAGGGGCTTATATGACTACTAGTATTAGTTCAGGTGAAAGAAGTATTGCTTCTACATAAAACTGGACAAATCCACTGACAATGTATTTTTAGTTAGCTACAAAGGAGTCTTATATTGCTGGACTTTACCTC--TTTGGTGAATTGGGAAGCTTAGT,PanTrogl,CATGAAAGAGTTCCAAGATAGAATTTAAATTTGAACTGATTCTTTATAGATAAGCTTTTTAAAAATCCACCTCTTTGCTTCAAGTCAGGATTTTAAAAAT-AAATTTCCCCTTTAAATCTCTTGAGC-GATTTTCATTTTTTGCAAGG-CCGCACTGCTGGTGTCCTGGAAAAATGGAGAGTTAGAGCTTTATCAGTTGGTGCCCTGAGGTATGTGGCGAAGAAGCTAAATCCTTGAAGATTAAC-AAAAAAAATGCAGCACATGGCAATAAGGGGCTTATATGACTACTAGTATTAGTTCAGGTGAAAGAAGTATTGCTTCTACATAAAACTGGACAAATCCACTGACAATGTATTTTTAGTTAGCTACAAAGGAGTCTTATATTGCTGGACTTTACCTC--TTTGGTGAATTGGGAAGCTTAGT',
  'chrm=chr1_1057,model=HKY:MusMuscu,--TACAAACTAGTTTCTGTGTTTGGGTAAAAAAGAGAGAATAAAAGTTTAATAAACGTGTGCTGTGTCGTGGATGACTTTGTGGCGACCTCTGTTGCAAATGGCCTATGCATGCGGAATAATGGCCTCCTTGCAGAGAGGGAAATAGCTTAGTGCTATCATCGTTGCCTCGGTAACCATCAGAG-TCCCCATCTAGCAAGAGA-GAAATGAGTTATG-AAAAGGCTTGAGTGAAGAAGGGA--TTAACACATGATCCCAGGGACAGTATGTCAATCAAAATCAACTGAG-AAATTACACT-CTCTATTTGAGAATTTCTCCGGTACCCAAAC-GGTAGTGAGGTT-AGCATTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTC-----------------TCTC-TCTCTCTC,GorGoril,-GTGCAAACTAGTTTCTGTG-TTGGGGGAAAAAAAGCGAATAAAAGTTTAATAAACGTGTGCTGTGTTGTGGATGACTTTGTGACGACCTCTGTTGCAAATGGCCTATGCATGCGGAATAATGGTCTCCTTGCAGAGAGGGAAATAGCTTAGTGCTATCATCGTTGCCTCGGTAACCATCAGAG-TCCCCATCTAGCAAGAGA-GAAATGAGTTATG-AAAAGGCTTGAGTGAAGAAGGGA--TTAACACATGATCCCAGGGACAGTGTGTCAATCAAAATCAACTGAG-AAATTTCACTGCTCTATTTGAGAATTTCTCCGGAACCCGCAT-GGTAGTGGAGTT-GGGTGCGTA--TTTTTTTTCCTCTCTCTCTTTTTTTCATTTGAGAAAGAAGGGGAAAGTATCATCGTGATT,PanTrogl,-GTGCAAACTAGTTTCTGTG-TTGGGGGAAAAAAAGCGAATAAAAGTTTAATAAACGTGTGCTGTGTTGTGGATGACTTTGTGACGACCTCTGTTGCAAATGGCCTATGCATGCGGAATAATGGTCTCCTTGCAGAGAGGGAAATAGCTTAGTGCTATCATCGTTGCCTCGGTAACCATCAGAG-TCCCCATCTAGCAAGAGA-GAAATGAGTTATG-AAAAGGCTTGAGTGAAGAAGGGA--TTAACACATGATCCCAGGGACAGTGTGTCAATCAAAATCAACTGAG-AAATTACACTGCTCTATTTGAGAATTTCTCCGGAACCCGCAT-GGTAGTGGAGTT-GGGTGCGTATTTTTTTTTTCCTCTCTCTCTTTTTTTCATTTGAGAAAGAAGGGGAAAGTATCATCGTGATT']
 
-def mrAIC(self, key, line, **kwargs):
+def mrAIC(self, key, line):
     """ Run mr-aic.pl on the each one-liner in the input file."""
-    pth, gt = kwargs['pth'], kwargs['gt']
-    oneliner = line.split("\t")[-1]     # weirdness parsing key, value
-    # PARSE EXTRA ALIGNMENT INFO
-    args_dict = {}
+    # weirdness parsing key, value
+    oneliner = line.split("\t")[-1]
     if ":" in line:
-        args_dict = self.processOnelinerData(oneliner, args_dict)
+        args_dict = self.split_oneliner(oneliner)
         # convert line to phylip
-        phylip = self.oneliner2phylip(oneliner.split(":")[-1])
+        phylip = self.oneliner_to_phylip(oneliner.split(":")[-1])
     else:
         # convert line to phylip
-        phylip = self.oneliner2phylip(oneliner)
-    #temp_in = tempfile.NamedTemporaryFile(suffix='.out', dir='tmp/')
-    descriptor, path = tempfile.mkstemp(suffix='.out', dir='tmp')
-    temp_in = os.fdopen(descriptor, 'w')
-    for line in phylip:
-        temp_in.write(line)
-    temp_in.close()
-    temp_dir = os.path.dirname(path)
-    # EXECUTE MR-AIC (AIC output only)
-    mraic = os.path.join(pth, "mraic_mod.pl")
-    phyml = os.path.join(pth, "PhyML3OSX")
-    cli = [
-            mraic,
-            "--infile",
-            path,
-            "--output_dir",
-            temp_dir,
-            "--phyml",
-            phyml
-        ]
-    stdout, stderr = subprocess.Popen(
-            cli,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        ).communicate()
-    # PARSE FILE NAMES IN TMP/ TO GET MODEL
-    aic_file = glob.glob("tmp/%s.AICc-*tre*" % os.path.basename(path))[0]
-    aic_model = aic_file.split('.')[-2].split("-")[-1]
-    args_dict['model'] = aic_model
-    oneliner = "%s:%s" % (self.makeTreeName(args_dict), oneliner.split(":")[-1])
+        phylip = self.oneliner_to_phylip(oneliner)
+    phyml = Phyml(phylip)
+    model, tree = phyml.best_model()
+    args_dict = {'model': model}
+    oneliner = "%s:%s" % (self.make_tree_name(args_dict), oneliner.split(":")[-1])
     if gt:
-        aic_fin = open(aic_file, 'rU')
         for line in aic_fin:
-            yield key, "tree '%s' = [&U] %s" % (self.makeTreeName(args_dict), line.strip())
+            yield key, "tree '%s' = [&U] %s" % (self.make_tree_name(args_dict), tree)
     else:
-        yield 1, oneliner  # give everything the same key so it can be reduced to a
-                           # 'oneliner' suitable for bootstrapping
+        # give everything the same key so it can be reduced to a
+        # 'oneliner' suitable for bootstrapping
+        yield 1, oneliner
 
 def get_bootstraps(sample, replicates=1):
     """Create boostrapped replicates of an a numpy array.
@@ -132,11 +105,11 @@ def make_tree_name(args_dict):
     return name
 
 
-def make_bootstrap_replicates():
-    #loci = line.rstrip(';').split(';')
-
+def make_bootstrap_replicates(self, key, line):
+    loci = line.strip().split(';')
+    loci = loci[:-1]
     # first, bootstrap across loci
-    multilocus_bstrap = get_bootstraps(DATA)
+    multilocus_bstrap = get_bootstraps(loci)
     # second, bootstrap bases within loci
     for locus in multilocus_bstrap:
         # split keys from alignments
@@ -152,6 +125,7 @@ def make_bootstrap_replicates():
         # convert back to oneliner
         oneliner = array_to_oneliner(taxa, shuffled)
         oneliner = "%s:%s" % (make_tree_name(args_dict), oneliner)
+        yield key, oneliner
 
 if __name__ == '__main__':
     make_bootstrap_replicates()
