@@ -68,7 +68,16 @@ class TestProcess(unittest.TestCase):
     def test_split_oneliner(self):
         # send single oneliner
         expected = {'chrm': 'chr1_1036'}
-        observed = self.p.split_oneliner(self.one, {})
+        observed = self.p.split_oneliner(self.one)
+        # dict
+        assert observed[0] == expected
+        # locus
+        assert observed[1] == self.one.split(':')[1]
+
+    def test_split_oneliner_with_default_model(self):
+        # send single oneliner
+        expected = {'chrm': 'chr1_1036', 'model': 'GTR'}
+        observed = self.p.split_oneliner(self.one, default_model=True)
         # dict
         assert observed[0] == expected
         # locus
