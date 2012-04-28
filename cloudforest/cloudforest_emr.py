@@ -2,7 +2,7 @@
 from mrjob.job import MRJob
 from mrjob.protocol import RawValueProtocol
 
-from cloudforest import Process
+from core import Process
 
 
 class ProcessPhyloData(MRJob, Process):
