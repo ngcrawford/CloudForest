@@ -41,6 +41,7 @@ class ProcessPhyloData(MRJob, Process):
                 '--mraic',
                 dest='mraic_opt',
                 action='store_true',
+                default=False,
                 help='Use MrAIC to calculate models'
             )
 
