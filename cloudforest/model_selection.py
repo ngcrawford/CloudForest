@@ -24,7 +24,16 @@ import subprocess
 class Phyml:
     """Use phyml to generate trees or help select models"""
     def __init__(self, phylip, pth='bin', exe=None):
-        self.phylip = os.path.abspath(os.path.expanduser(phylip))
+        self.cwd = os.getcwd()
+        working = tempfile.mkdtemp(dir='tmp')
+        self.working = os.path.abspath(working)
+        if os.path.exists(phylip):
+            phylip = os.path.abspath(os.path.expanduser(phylip))
+            self.phylip = os.path.join(self.working, os.path.basename(phylip))
+            shutil.copyfile(
+                    phylip,
+                    self.phylip
+                    )
         self.phyml3 = self._get_phyml_pth(pth, exe)
         # model parameters taken from John Nylander's excellent mr_aic.pl
         # http://www.abc.se/~nylander/
@@ -80,6 +89,10 @@ class Phyml:
                 'GTRG': 9,
                 'GTRIG': 10
             }
+
+    def __del__(self):
+        """cleanup empty dir - not guaranteed to be called during execution, only at close"""
+        shutil.rmtree(self.working)
 
     def _get_phyml_pth(self, pth, exe):
         if not exe:
@@ -148,22 +161,22 @@ class Phyml:
         statfile, treefile = [''.join([phylip, ext]) for ext in ['_phyml_stats.txt', '_phyml_tree.txt']]
         return statfile, treefile
 
-    def best_model(self, aicc=False):
+    def best_model(self, return_aic=False):
         """compute the best model for an alignment using AICc"""
         # compile this once
         ll_regex = re.compile("Log-likelihood:\s+(.+)")
         dim_regex = re.compile("\s*(\d+)\s+(\d+)")
         results = {}
         # get current dir
-        cwd = os.getcwd()
+        #cwd = os.getcwd()
         # create tempdir to hold phyml output on
         # per locus level
-        working = tempfile.mkdtemp(dir='tmp')
-        os.chdir(working)
+        #working = tempfile.mkdtemp(dir='tmp')
+        os.chdir(self.working)
         # copy phylip to working - phyml does like long paths
         # copy file to tempdir once - work in tempdir - delete temp
         # out files after computing aicc.
-        shutil.copyfile(self.phylip, os.path.basename(self.phylip))
+        #shutil.copyfile(self.phylip, os.path.basename(self.phylip))
         self._get_taxon_and_char_data(dim_regex)
         for model_name, model in self.models.iteritems():
             phylip = os.path.basename(self.phylip)
@@ -175,11 +188,11 @@ class Phyml:
             results[aicc] = [model_name, tree]
             # need to delete files individually, because names are same on next iter
             [os.remove(f) for f in [statfile, treefile]]
-        os.chdir(cwd)
-        shutil.rmtree(working)
+        os.chdir(self.cwd)
+        #shutil.rmtree(working)
         # best is min(AICc)
         best = min(results.keys())
-        if not aicc:
+        if not return_aic:
             return results[best][0], results[best][1]
         else:
             return results
