@@ -9,11 +9,9 @@ Copyright (c) 2012 Brant C. Faircloth. All rights reserved.
 
 """
 
-import os
 import copy
 import cPickle
 import unittest
-import numpy as np
 from context import cloudforest
 
 import pdb
