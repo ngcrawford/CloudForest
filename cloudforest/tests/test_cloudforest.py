@@ -17,7 +17,8 @@ from context import cloudforest
 
 import pdb
 
-class TestCloudForestFunctions(unittest.TestCase):
+
+class TestProcess(unittest.TestCase):
 
     def setUp(self):
         self.p = cloudforest.Process()
@@ -25,7 +26,7 @@ class TestCloudForestFunctions(unittest.TestCase):
 
     def test_oneliner_to_phylip(self):
         expected = cPickle.load(open('pickles/expected_phylip.pickle'))
-        observed = self.p.oneliner2phylip(self.one)
+        observed = self.p.oneliner_to_phylip(self.one)
         assert observed == expected
 
     def test_bootstrap(self):
@@ -90,16 +91,16 @@ class TestCloudForestFunctions(unittest.TestCase):
     def test_phyml(self):
         pass
 
-    def test_mraic(self):
-        try:
-            os.makedirs('tmp')
-        except OSError:
-            pass
-        observed = self.p.mrAIC(1, self.one, '../binaries')
-        #pdb.set_trace()
-        #os.remove('tmp')
+    def test_get_genetrees_and_models(self):
+        obs_gen = self.p.get_genetrees_and_models(1, self.one, bin='../binaries', genetrees=True)
+        exp_key, exp_tree = cPickle.load(open('pickles/expected_genetrees.pickle'))
+        observed = [o for o in obs_gen]
+        assert len(observed) == 1
+        observed = observed[0]
+        obs_key, obs_tree = observed
+        assert obs_key == exp_key
+        assert obs_tree == exp_tree
 
 
 if __name__ == '__main__':
     unittest.main()
-

@@ -31,16 +31,14 @@ class Process():
 
     def oneliner_to_phylip(self, line):
         """Convert one-liner to phylip format."""
-        seqs = line.strip(";").split(',')
+        seqs = line.strip(";\n").split(',')
         label_seqs = zip(seqs[:-1:2], seqs[1::2])
         taxa_count = len(label_seqs)
         seq_length = len(label_seqs[0][1])
         # add header
-        alignment = "%s %s\n" % (taxa_count, seq_length)
-        for taxa_name, seq in label_seqs:
-            taxa_name = taxa_name.strip()
-            alignment += '%-10s%s\n' % (taxa_name, seq)
-        return alignment
+        header = "%s %s\n" % (taxa_count, seq_length)
+        alignment = '\n'.join(['%-10s%s' % (i[0].strip(), i[1]) for i in label_seqs])
+        return header + alignment
 
     def get_bootstraps(self, sample, replicates=1, return_choices=False):
         """Create boostrapped replicates of an a numpy array.
@@ -169,13 +167,15 @@ class Process():
         
         # GET MODEL INFO FROM FILE IF AVAILABLE
         args_dict = {}
-        args_dict['model'] = 'HKY85'                     # set default model
+        # set default model
+        args_dict['model'] = 'HKY85'
         if ":" in line:
-            args_dict = self.processOnelinerData(line, args_dict)
-            phylip = self.oneliner2phylip(line.split(":")[-1]) # convert line to phylip
+            args_dict = self.split_oneliner(line, args_dict)
+            # convert line to phylip
+            phylip = self.oneliner_to_phylip(line.split(":")[-1])
         
         else:
-            phylip = self.oneliner2phylip(line) # convert line to phylip
+            phylip = self.oneliner_to_phylip(line) # convert line to phylip
         
         # SETUP TEMP FILE
         temp_in = tempfile.NamedTemporaryFile(suffix='.out', dir='tmp/')
@@ -206,48 +206,32 @@ class Process():
         
         else:
             yield key, tree
-    
-    def mrAIC(self, key, line, bin='bin'):
-        """ Run mr-aic.pl on the each one-liner in the input file."""     
-        oneliner = line.split("\t")[-1]     # weirdness parsing key, value
 
+    def get_genetrees_and_models(self, key, line, bin='bin', genetrees=True):
+        """"""
+        # weirdness parsing key, value
+        oneliner = line.split("\t")[-1]
         # PARSE EXTRA ALIGNMENT INFO
-        args_dict = {}
         if ":" in line:
-            args_dict = self.processOnelinerData(oneliner, args_dict)
-            phylip = self.oneliner2phylip(oneliner.split(":")[-1]) # convert line to phylip
-                
-        else:        
-            phylip = self.oneliner2phylip(oneliner)  # convert line to phylip
-                        
-        temp_in = tempfile.NamedTemporaryFile(suffix='.out', dir='tmp/')
-        for line in phylip:
-            temp_in.write(line)
-        temp_in.seek(0)          
-        temp_dir = os.path.dirname(temp_in.name)
-                
-        # EXECUTE MR-AIC (AIC output only)            
-        cli = "%s --infile=%s --output_dir=%s >/dev/null 2>&1" % \
-            (os.path.join(bin, 'mraic_mod.pl'), temp_in.name, temp_dir)
-        #pdb.set_trace()        
-        cli_parts = cli.split()
-        ft = Popen(cli_parts, stdin=PIPE, stderr=PIPE, stdout=PIPE).communicate()
-                
-        # PARSE FILE NAMES IN TMP/ TO GET MODEL          
-        aic_file = glob.glob("tmp/%s.AICc-*tre*" % os.path.basename(temp_in.name))[0]
-        aic_model = aic_file.split('.')[-2].split("-")[-1]
-        args_dict['model'] = aic_model
-        oneliner = "%s:%s" % (self.makeTreeName(args_dict), oneliner.split(":")[-1])       
-        '''
-        if self.options.gene_trees == True:
-            aic_fin = open(aic_file,'rU')
-            for line in aic_fin:
-                yield key, "tree '%s' = [&U] %s" % (self.makeTreeName(args_dict), line.strip())
+            args_dict = self.split_oneliner(oneliner)
+            # convert line to phylip
+            phylip = self.oneliner_to_phylip(oneliner.split(":")[-1])
         else:
-            yield 1, oneliner  # give everything the same key so it can be reduced to a 
-                               # 'oneliner' suitable for bootstrapping
-        '''
-      
+            # convert line to phylip
+            phylip = self.oneliner_to_phylip(oneliner)
+        phyml = Phyml(phylip, bin)
+        model, tree = phyml.best_aicc_model_and_tree()
+        args_dict['model'] = model
+        oneliner = "%s:%s" % (self.make_tree_name(args_dict), oneliner.split(":")[-1])
+        try:
+            gtrees = self.options.gene_trees
+        except AttributeError:
+            gtrees = genetrees
+        if gtrees == True:
+            yield key, "tree '%s' = [&U] %s" % (self.make_tree_name(args_dict), tree)
+        else:
+            yield 1, oneliner
+
     def duplicate_oneliner(self, key, line, bootreps=500):
         """Take lines and duplicate them the number of times
         specified by the --bootreps flag."""
@@ -259,7 +243,6 @@ class Process():
         for i in reversed(xrange(1, reps + 1)):
             yield i, line
 
-          
     def lines2Oneliner(self, key, line):
         """Convert multiple alignments with the same key
         to a concatenated oneliner with the same key"""
@@ -283,7 +266,7 @@ class Phyml:
                     )
         # if we get a string for a file, write to tempdir/tempfile
         elif type(phylip) == str:
-            fd, self.phylip = tempfile.mkstemp(dir=self.working, text=True)
+            fd, self.phylip = tempfile.mkstemp(dir=self.working, suffix='.phylip', text=True)
             os.write(fd, phylip)
             os.close(fd)
         else:
@@ -369,7 +352,7 @@ class Phyml:
                 phyml3 = os.path.join(pth, 'PhyML3linux32')
         else:
             phyml3 = os.path.join(pth, exe)
-        return phyml3
+        return os.path.abspath(os.path.expanduser(phyml3))
 
     def _get_taxon_and_char_data(self, regex):
         """[Private] Parse the first line of a phylip file and return nchar and ntax"""
