@@ -25,11 +25,13 @@ class TestProcess(unittest.TestCase):
         self.one = open('alignments/3.oneliners', 'rU').readline()
 
     def test_oneliner_to_phylip(self):
+        """[Process] Oneliner to phylip"""
         expected = cPickle.load(open('pickles/expected_phylip.pickle'))
         observed = self.p.oneliner_to_phylip(self.one)
         assert observed == expected
 
     def test_bootstrap(self):
+        """[Process] Bootstrap"""
         # we are assuming sampling with replacement works as advertised
         # and just checking to make sure we re-order according to sample
         # here.
@@ -40,11 +42,13 @@ class TestProcess(unittest.TestCase):
             assert (bs[k] == align[choices[k]]).all()
 
     def prep_oneliner_array(self):
+        """[Process] Prep oneliner array"""
         locus = self.one.strip().split(';')
         locus = locus[0].split(':')[1]
         return locus
 
     def test_oneliner_to_array(self):
+        """[Process] Oneliner to array"""
         exp_taxa = ['MusMuscu', 'GorGoril', 'PanTrogl']
         exp_align = cPickle.load(open('pickles/expected_align_to_array.pickle'))
         locus = self.prep_oneliner_array()
@@ -54,18 +58,21 @@ class TestProcess(unittest.TestCase):
         assert (obs_align == exp_align).all()
 
     def test_array_to_oneliner(self):
+        """[Process] Array to oneliner"""
         expected = self.prep_oneliner_array()
         taxa, align = self.p.oneliner_to_array(expected)
         observed = self.p.array_to_oneliner(taxa, align)
         assert observed == expected
 
     def test_make_tree_name(self):
+        """[Process] Tree name from args_dict"""
         d = {'chrm': 'chr1_1036'}
         observed = self.p.make_tree_name(d)
         expected = 'chrm=chr1_1036'
         assert observed == expected
 
     def test_split_oneliner(self):
+        """[Process] Split oneliner"""
         # send single oneliner
         expected = {'chrm': 'chr1_1036'}
         observed = self.p.split_oneliner(self.one)
@@ -75,6 +82,7 @@ class TestProcess(unittest.TestCase):
         assert observed[1] == self.one.split(':')[1]
 
     def test_split_oneliner_with_default_model(self):
+        """[Process] Split oneliner and assign default model"""
         # send single oneliner
         expected = {'chrm': 'chr1_1036', 'model': 'GTR'}
         observed = self.p.split_oneliner(self.one, default_model=True)
@@ -84,6 +92,7 @@ class TestProcess(unittest.TestCase):
         assert observed[1] == self.one.split(':')[1]
 
     def test_duplicate_oneliner(self):
+        """[Process] Duplicate oneliners"""
         locus = self.prep_oneliner_array()
         d = {'chrm': 'chr1_1036'}
         tree_name = self.p.make_tree_name(d)
@@ -98,6 +107,7 @@ class TestProcess(unittest.TestCase):
         pass
 
     def test_get_genetrees_gtr(self):
+        """[Process] genetrees works with GTR"""
         obs_gen = self.p.get_genetrees(1, self.one, pth='../binaries', genetrees=True)
         exp_key, exp_tree = cPickle.load(open('pickles/expected_genetrees_gtr.pickle'))
         observed = [o for o in obs_gen]
@@ -108,6 +118,7 @@ class TestProcess(unittest.TestCase):
         assert obs_tree == exp_tree
 
     def test_get_genetrees_hky(self):
+        """[Process] genetrees works with models in onliner"""
         one_liner = open('alignments/3.oneliners', 'rU').readline()
         one_liner = copy.deepcopy(self.one).split(':')
         one_liner[0] += ",model=HKY"
@@ -122,6 +133,7 @@ class TestProcess(unittest.TestCase):
         assert obs_tree == exp_tree
 
     def test_get_genetrees_and_models_for_genetrees(self):
+        """[Process] genetrees_and_models yields tree"""
         obs_gen = self.p.get_genetrees_and_models(1, self.one, pth='../binaries', genetrees=True)
         exp_key, exp_tree = cPickle.load(open('pickles/expected_genetrees_and_model.pickle'))
         observed = [o for o in obs_gen]
@@ -132,6 +144,7 @@ class TestProcess(unittest.TestCase):
         assert obs_tree == exp_tree
 
     def test_get_genetrees_and_models_for_oneliner(self):
+        """[Process] genetrees_and_models yields oneliner"""
         obs_gen = self.p.get_genetrees_and_models(1, self.one, pth='../binaries', genetrees=False)
         exp_key, exp_oneliner = cPickle.load(open('pickles/expected_genetree_oneliners.pickle'))
         observed = [o for o in obs_gen]
@@ -147,20 +160,24 @@ class TestPhymlMethods(unittest.TestCase):
         self.phyml = cloudforest.Phyml('alignments/phylip_primates/chr1_1036.phylip', pth='../binaries')
 
     def test_model_statements(self):
+        """[Phyml] Model templates are correct"""
         expected = cPickle.load(open('pickles/phyml_models.pickle'))
         assert self.phyml.models == expected
 
     def test_model_numparams(self):
+        """[Phyml] numparams is correct"""
         expected = cPickle.load(open('pickles/phyml_numparams.pickle'))
         assert self.phyml.numparams == expected
 
     def test_taxa_and_characters(self):
+        """[Phyml] Parse taxa and nchar"""
         self.phyml._get_taxon_and_char_data()
         assert self.phyml.taxa == 10
         assert self.phyml.nchar == 430
         assert self.phyml.nbranch == (2 * 10) - 3
 
     def test_compute_aicc(self):
+        """[Phyml] AICc formula"""
         # with loglik = 20 and params = 1 and nchar = 430
         expected = -2.335766423357664
         # set nchar and nbranch
@@ -178,6 +195,14 @@ class TestPhymlMethods(unittest.TestCase):
         return tree1.euclidean_distance(tree2)
 
     def test_slow_aicc_model(self):
+        """[Phyml] AICc best models
+
+        Run all these because it's slow and we don't want to recompute results
+        to test every little thing.  The tests of trees are a little tricky
+        because we need to ensure the trees are identical, but the ML optimization
+        returns slightly different branch lengths all the time.
+        So, compute tree distance, and assert that it's almost equal to 0.
+        """
         # best model
         expected = 'GTR'
         observed = self.phyml.best_aicc_model()
@@ -211,6 +236,7 @@ class TestPhymlMethods(unittest.TestCase):
             self.assertAlmostEqual(distance, 0.0, 2)
 
     def test_run(self):
+        """[Phyml] Phyml.run()"""
         expected = cPickle.load(open('pickles/gtr_lnl_and_model.pickle'))
         observed = self.phyml.run('GTR')
         distance = self.get_tree_distances(observed[1], expected[1])
