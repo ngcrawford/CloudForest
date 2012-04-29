@@ -90,7 +90,7 @@ class Process():
         oneliner = ','.join([','.join([taxa[count], seq.tostring()]) for count, seq in enumerate(bases)])
         return oneliner
 
-    def make_bootstrap_replicates(self, key, line):
+    def get_bootstrap_replicates(self, key, line):
         loci = line.strip().split(';')
         loci = loci[:-1]
         # first, bootstrap across loci
@@ -206,7 +206,7 @@ class Process():
         for i in reversed(xrange(1, reps + 1)):
             yield i, line
 
-    def lines2Oneliner(self, key, line):
+    def concatenate_oneliners(self, key, line):
         """Convert multiple alignments with the same key
         to a concatenated oneliner with the same key"""
         concatenated_line = "".join(line)
