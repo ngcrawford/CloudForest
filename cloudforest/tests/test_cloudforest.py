@@ -12,6 +12,7 @@ Copyright (c) 2012 Brant C. Faircloth. All rights reserved.
 import copy
 import cPickle
 import unittest
+import dendropy
 from context import cloudforest
 
 import pdb
@@ -139,6 +140,82 @@ class TestProcess(unittest.TestCase):
         assert obs_key == exp_key
         assert exp_oneliner == exp_oneliner
 
+
+class TestPhymlMethods(unittest.TestCase):
+
+    def setUp(self):
+        self.phyml = cloudforest.Phyml('alignments/phylip_primates/chr1_1036.phylip', pth='../binaries')
+
+    def test_model_statements(self):
+        expected = cPickle.load(open('pickles/phyml_models.pickle'))
+        assert self.phyml.models == expected
+
+    def test_model_numparams(self):
+        expected = cPickle.load(open('pickles/phyml_numparams.pickle'))
+        assert self.phyml.numparams == expected
+
+    def test_taxa_and_characters(self):
+        self.phyml._get_taxon_and_char_data()
+        assert self.phyml.taxa == 10
+        assert self.phyml.nchar == 430
+        assert self.phyml.nbranch == (2 * 10) - 3
+
+    def test_compute_aicc(self):
+        # with loglik = 20 and params = 1 and nchar = 430
+        expected = -2.335766423357664
+        # set nchar and nbranch
+        self.phyml.nchar = 430
+        self.phyml.nbranch = 17
+        # params of JC69I = 1
+        aicc = self.phyml._compute_aicc('JC69I', 20)
+        self.assertAlmostEqual(expected, aicc, 4)
+
+    def get_tree_distances(self, newick1, newick2):
+        tree1 = dendropy.Tree()
+        tree2 = dendropy.Tree()
+        tree1.read_from_string(newick1, 'newick')
+        tree2.read_from_string(newick2, 'newick')
+        return tree1.euclidean_distance(tree2)
+
+    def test_slow_aicc_model(self):
+        # best model
+        expected = 'GTR'
+        observed = self.phyml.best_aicc_model()
+        assert observed == expected
+        # best tree
+        expected = cPickle.load(open('pickles/best_aicc_tree.pickle'))
+        observed = self.phyml.best_aicc_tree()
+        distance = self.get_tree_distances(observed[1], expected[1])
+        self.assertAlmostEqual(distance, 0.0, 2)
+        # best model and tree
+        expected = cPickle.load(open('pickles/best_aicc_model_and_tree.pickle'))
+        observed = self.phyml.best_aicc_model_and_tree()
+        assert observed[0] == expected[0]
+        distance = self.get_tree_distances(observed[1], expected[1])
+        self.assertAlmostEqual(distance, 0.0, 2)
+        # all results
+        expected = cPickle.load(open('pickles/best_aicc_model_results.pickle'))
+        observed = self.phyml.aicc_model_results()
+        observed_aicc = sorted(observed.keys())
+        expected_aicc = sorted(expected.keys())
+        for pos, aic in enumerate(observed_aicc):
+            # aiccs are almost equal
+            self.assertAlmostEqual(aic, expected_aicc[pos], 4)
+            # model names are equal
+            observed[aic][0] == expected[expected_aicc[pos]][0]
+            # trees are almost equal
+            distance = self.get_tree_distances(
+                    observed[aic][1],
+                    expected[expected_aicc[pos]][1]
+                )
+            self.assertAlmostEqual(distance, 0.0, 2)
+
+    def test_run(self):
+        expected = cPickle.load(open('pickles/gtr_lnl_and_model.pickle'))
+        observed = self.phyml.run('GTR')
+        distance = self.get_tree_distances(observed[1], expected[1])
+        self.assertAlmostEqual(distance, 0.0, 2)
+        self.assertAlmostEqual(float(observed[0]), float(expected[0]), 4)
 
 if __name__ == '__main__':
     unittest.main()
