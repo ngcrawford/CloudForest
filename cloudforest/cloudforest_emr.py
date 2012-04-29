@@ -19,7 +19,7 @@ class ProcessPhyloData(MRJob, Process):
         self.add_passthrough_option(
                 '--bootreps',
                 dest='bootreps2run',
-                default=None,
+                default=False,
                 type='int',
                 help='Number of bootstrap replicates to generate'
             )
@@ -28,12 +28,14 @@ class ProcessPhyloData(MRJob, Process):
                 '--gene-trees',
                 action="store_true",
                 dest='gene_trees',
+                default=False,
                 help='Generate gene trees from alignments'
             )
 
         self.add_passthrough_option(
                 '--full-analysis',
                 action="store_true",
+                default=False,
                 help='Run full analysis'
             )
 
@@ -64,7 +66,7 @@ class ProcessPhyloData(MRJob, Process):
                 return RawValueProtocol()
             return [self.mr(self.get_genetrees_and_models, reducer=None)]
 
-        if self.options.gene_trees == True and self.options.mraic_opt == None:
+        if self.options.gene_trees == True and self.options.mraic_opt == False:
             # TODO rewrite as a single fuction outside of steps.
             def output_protocol(self):
                 return RawValueProtocol()
