@@ -153,7 +153,7 @@ class Process():
                 args_dict['model'] = 'GTR'
         return args_dict, locus
 
-    def get_genetrees(self, key, line, bin='bin', genetrees=True, no_model=False):
+    def get_genetrees(self, key, line, pth='bin', genetrees=True, no_model=False):
         """Compute genetrees using model in oneliner. Parses out evolutionary
          model if provided as first word in file.  Otherwise, runs GTR."""
         # TODO:  Why is this here?
@@ -161,7 +161,7 @@ class Process():
             key, line = line.split("\t")
         args_dict, locus = self.split_oneliner(line, default_model=True)
         phylip = self.oneliner_to_phylip(locus)
-        phyml = Phyml(phylip, bin)
+        phyml = Phyml(phylip, pth)
         # run phyml.  if no model, defaults to GTR
         # TOOD: Why do we need LnL?
         args_dict['lnL'], tree = phyml.run(args_dict['model'])
@@ -175,14 +175,14 @@ class Process():
         else:
             yield key, tree
 
-    def get_genetrees_and_models(self, key, line, bin='bin', genetrees=True):
+    def get_genetrees_and_models(self, key, line, pth='bin', genetrees=True):
         """Compute genetrees from the best fitting substitution model and return
         generator of genetrees and/or oneliner with models integrated"""
         # TODO: move into separate line_cleaner function?
         oneliner = line.split("\t")[-1].strip('\n')
         args_dict, locus = self.split_oneliner(line)
         phylip = self.oneliner_to_phylip(locus)
-        phyml = Phyml(phylip, bin)
+        phyml = Phyml(phylip, pth)
         model, tree = phyml.best_aicc_model_and_tree()
         args_dict['model'] = model
         oneliner = "%s:%s" % (self.make_tree_name(args_dict), oneliner.split(":")[-1])
@@ -294,6 +294,7 @@ class Phyml:
             }
         # compile regex for LnL once
         self.ll = re.compile("Log-likelihood:\s+(.+)")
+        self.dim = re.compile("\s*(\d+)\s+(\d+)")
 
     def __del__(self):
         """Cleanup empty dir - not guaranteed to be called during execution,
@@ -320,11 +321,11 @@ class Phyml:
             phyml3 = os.path.join(pth, exe)
         return os.path.abspath(os.path.expanduser(phyml3))
 
-    def _get_taxon_and_char_data(self, regex):
+    def _get_taxon_and_char_data(self):
         """[Private] Parse the first line of a phylip file and return nchar and ntax"""
         # get taxon and character data for file
         first_line = open(self.phylip, 'rU').readline()
-        self.taxa, self.nchar = [int(val) for val in regex.search(first_line).groups()]
+        self.taxa, self.nchar = [int(val) for val in self.dim.search(first_line).groups()]
         # calculate to keep results comparable to mr_aic.pl
         self.nbranch = (2 * self.taxa) - 3
 
@@ -382,13 +383,11 @@ class Phyml:
 
     def _best_model_runner(self, return_aicc=False):
         """Compute the best model for an alignment using AICc"""
-        # compile this once
-        dim_regex = re.compile("\s*(\d+)\s+(\d+)")
         self.lnl_results = {}
         self.aicc_results = {}
         # because of phyml, move to working dir
         os.chdir(self.working)
-        self._get_taxon_and_char_data(dim_regex)
+        self._get_taxon_and_char_data()
         for model_name, model in self.models.iteritems():
             phylip = os.path.basename(self.phylip)
             # self._runner generates out phyml locus and model template
