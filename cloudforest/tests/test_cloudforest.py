@@ -92,15 +92,12 @@ class TestProcess(unittest.TestCase):
         observed = [d for d in dupes]
         assert observed == expected
 
-    def test_process_stats_file(self):
-        pass
-
     def test_lines_to_oneliner(self):
         # I'm not entirely sure what this does
         pass
 
     def test_get_genetrees_gtr(self):
-        obs_gen = self.p.get_genetrees(1, self.one, bin='../binaries', genetrees=True)
+        obs_gen = self.p.get_genetrees(1, self.one, pth='../binaries', genetrees=True)
         exp_key, exp_tree = cPickle.load(open('pickles/expected_genetrees_gtr.pickle'))
         observed = [o for o in obs_gen]
         assert len(observed) == 1
@@ -114,7 +111,7 @@ class TestProcess(unittest.TestCase):
         one_liner = copy.deepcopy(self.one).split(':')
         one_liner[0] += ",model=HKY"
         one_liner = ':'.join(one_liner)
-        obs_gen = self.p.get_genetrees(1, one_liner, bin='../binaries', genetrees=True)
+        obs_gen = self.p.get_genetrees(1, one_liner, pth='../binaries', genetrees=True)
         exp_key, exp_tree = cPickle.load(open('pickles/expected_genetrees_hky.pickle'))
         observed = [o for o in obs_gen]
         assert len(observed) == 1
@@ -124,7 +121,7 @@ class TestProcess(unittest.TestCase):
         assert obs_tree == exp_tree
 
     def test_get_genetrees_and_models_for_genetrees(self):
-        obs_gen = self.p.get_genetrees_and_models(1, self.one, bin='../binaries', genetrees=True)
+        obs_gen = self.p.get_genetrees_and_models(1, self.one, pth='../binaries', genetrees=True)
         exp_key, exp_tree = cPickle.load(open('pickles/expected_genetrees_and_model.pickle'))
         observed = [o for o in obs_gen]
         assert len(observed) == 1
@@ -134,7 +131,7 @@ class TestProcess(unittest.TestCase):
         assert obs_tree == exp_tree
 
     def test_get_genetrees_and_models_for_oneliner(self):
-        obs_gen = self.p.get_genetrees_and_models(1, self.one, bin='../binaries', genetrees=False)
+        obs_gen = self.p.get_genetrees_and_models(1, self.one, pth='../binaries', genetrees=False)
         exp_key, exp_oneliner = cPickle.load(open('pickles/expected_genetree_oneliners.pickle'))
         observed = [o for o in obs_gen]
         assert len(observed) == 1
