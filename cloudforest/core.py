@@ -98,7 +98,7 @@ class Process():
         # second, bootstrap bases within loci
         for locus in multilocus_bstrap:
             # split keys from alignments
-            args_dict, locus = self.split_one_liner(locus, return_locus=True)
+            args_dict, locus = self.split_oneliner(locus)
             # convert alignments to arrays
             taxa, numpy_alignment = self.oneliner_to_array(locus)
             # transpose so we bootstrap by columns
