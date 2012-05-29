@@ -30,37 +30,37 @@ def get_args():
             "input",
             type=is_dir,
             action=FullPaths,
-            help="""Help text"""
+            help="""The path to a directory of PHYLIP-formatted alignments."""
         )
     parser.add_argument(
             "output",
             type=is_dir,
             action=FullPaths,
-            help="""Help text""",
+            help="""The path to a directory in which to store the output.""",
         )
     parser.add_argument(
             "run",
             choices=['genetrees', 'bootstraps', 'both'],
             default=None,
-            help="""Help text""",
+            help="""The type of analysis to run.""",
         )
     parser.add_argument(
             "phyml",
             action=FullPaths,
-            help="""Help text""",
+            help="""The path (including executable name) to PhyML on your platform.""",
         )
     parser.add_argument(
             "--genetrees",
             action=FullPaths,
             type=is_file,
             default=None,
-            help="""Help text""",
+            help="""The path to the genetrees output by a previous run.  Needed only when bootstrapping a prior run.""",
         )
     parser.add_argument(
             "--bootreps",
             type=int,
-            default=5,
-            help="""Help text""",
+            default=100,
+            help="""The number of bootstrap replicates to run.""",
         )
     args = parser.parse_args()
 
@@ -123,11 +123,11 @@ def get_bootstrap_replicates(multilocus_bstrap):
 
 def genetree_worker(params):
     """Worker function to compute genetrees for individual loci"""
-    locus, opts = params
+    locus, fullpth = params
     name, phylip = locus
-    pth = opts
+    pth, exe = os.path.split(fullpth)
     args_dict = {}
-    phyml = Phyml(phylip, pth)
+    phyml = Phyml(phylip, pth=pth, exe=exe)
     model, tree = phyml.best_aicc_model_and_tree()
     args_dict['chrm'] = name
     args_dict['model'] = model
@@ -138,7 +138,8 @@ def genetree_worker(params):
 def bootstrap_worker(params):
     """Worker function to compute boostrap replicates of datasets and indiv. loci"""
     bootstrap_trees = []
-    rep, pth, oneliners = params
+    rep, fullpth, oneliners = params
+    pth, exe = os.path.split(fullpth)
     # first, resample w/ replacement/bootstrap across loci
     multilocus_bstrap = get_bootstraps(oneliners)
     # Resample w/ replacement/boostrap bases within loci
@@ -146,7 +147,7 @@ def bootstrap_worker(params):
     for oneliner in bootstraps:
         args_dict, locus = split_oneliner(oneliner, default_model=True)
         phylip = oneliner_to_phylip(locus)
-        phyml = Phyml(phylip, pth)
+        phyml = Phyml(phylip, pth=pth, exe=exe)
         # run phyml.  if no model, defaults to GTR
         # TOOD: Why do we need LnL?
         args_dict['lnL'], tree = phyml.run(args_dict['model'])
@@ -162,7 +163,7 @@ def boostrap_all_loci(args, models, alns):
     # for every rep in boostraps, map loci onto worker that will
     # bootstrap, run phyml, and return bootstrap trees
     params = generate_bootreps(args.bootreps, args.phyml, oneliners)
-    bootreps = map(bootstrap_worker, params)
+    bootreps = mmap(bootstrap_worker, params)
     # write
     outname = "%s-bootreps.tree" % (args.bootreps)
     outf = open(os.path.join(args.output, outname), 'w')
@@ -177,12 +178,13 @@ def main():
     alns = {}
     for f in glob.glob(os.path.join(args.input, '*.phy*')):
         alns[os.path.splitext(os.path.basename(f))[0]] = open(f, 'rU').read()
+
     # replicate our options for passing to map()
     opts = [args.phyml for i in range(len(alns))]
     # compute genetrees
     if args.run == 'genetrees' or args.run == 'both':
         params = zip(alns.items(), opts)
-        genetrees = map(genetree_worker, params)
+        genetrees = mmap(genetree_worker, params)
         # write genetrees to output file
         outf = open(os.path.join(args.output, 'genetrees.tre'), 'w')
         for tree in genetrees:
@@ -201,4 +203,14 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    from deap.dtm import map as mmap
+    from deap.dtm import start
+    start(main)
+    
+    #from multiprocessing import Pool
+    #pool = Pool(4)
+    #mmap = pool.map
+
+    #mmap = map
+    #main()
+    
