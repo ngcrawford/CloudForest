@@ -13,7 +13,7 @@ import copy
 import cPickle
 import unittest
 import dendropy
-from context import cloudforest
+from context import cloudforest as cl
 
 import pdb
 
@@ -21,13 +21,13 @@ import pdb
 class TestProcess(unittest.TestCase):
 
     def setUp(self):
-        self.p = cloudforest.Process()
+        self.p = cl.Process()
         self.one = open('alignments/3.oneliners', 'rU').readline()
 
     def test_oneliner_to_phylip(self):
         """[Process] Oneliner to phylip"""
         expected = cPickle.load(open('pickles/expected_phylip.pickle'))
-        observed = self.p.oneliner_to_phylip(self.one)
+        observed = cl.oneliner_to_phylip(self.one)
         assert observed == expected
 
     def test_bootstrap(self):
@@ -36,8 +36,8 @@ class TestProcess(unittest.TestCase):
         # and just checking to make sure we re-order according to sample
         # here.
         expected = self.prep_oneliner_array()
-        taxa, align = self.p.oneliner_to_array(expected)
-        bs, choices = self.p.get_bootstraps(align, return_choices=True)
+        taxa, align = cl.oneliner_to_array(expected)
+        bs, choices = cl.get_bootstraps(align, return_choices=True)
         for k, aln in enumerate(bs):
             assert (bs[k] == align[choices[k]]).all()
 
@@ -52,7 +52,7 @@ class TestProcess(unittest.TestCase):
         exp_taxa = ['MusMuscu', 'GorGoril', 'PanTrogl']
         exp_align = cPickle.load(open('pickles/expected_align_to_array.pickle'))
         locus = self.prep_oneliner_array()
-        obs_taxa, obs_align = self.p.oneliner_to_array(locus)
+        obs_taxa, obs_align = cl.oneliner_to_array(locus)
         assert obs_taxa == exp_taxa
         # comparing arrays
         assert (obs_align == exp_align).all()
@@ -60,14 +60,14 @@ class TestProcess(unittest.TestCase):
     def test_array_to_oneliner(self):
         """[Process] Array to oneliner"""
         expected = self.prep_oneliner_array()
-        taxa, align = self.p.oneliner_to_array(expected)
-        observed = self.p.array_to_oneliner(taxa, align)
+        taxa, align = cl.oneliner_to_array(expected)
+        observed = cl.array_to_oneliner(taxa, align)
         assert observed == expected
 
     def test_make_tree_name(self):
         """[Process] Tree name from args_dict"""
         d = {'chrm': 'chr1_1036'}
-        observed = self.p.make_tree_name(d)
+        observed = cl.make_tree_name(d)
         expected = 'chrm=chr1_1036'
         assert observed == expected
 
@@ -75,7 +75,7 @@ class TestProcess(unittest.TestCase):
         """[Process] Split oneliner"""
         # send single oneliner
         expected = {'chrm': 'chr1_1036'}
-        observed = self.p.split_oneliner(self.one)
+        observed = cl.split_oneliner(self.one)
         # dict
         assert observed[0] == expected
         # locus
@@ -85,7 +85,7 @@ class TestProcess(unittest.TestCase):
         """[Process] Split oneliner and assign default model"""
         # send single oneliner
         expected = {'chrm': 'chr1_1036', 'model': 'GTR'}
-        observed = self.p.split_oneliner(self.one, default_model=True)
+        observed = cl.split_oneliner(self.one, default_model=True)
         # dict
         assert observed[0] == expected
         # locus
@@ -95,7 +95,7 @@ class TestProcess(unittest.TestCase):
         """[Process] Duplicate oneliners"""
         locus = self.prep_oneliner_array()
         d = {'chrm': 'chr1_1036'}
-        tree_name = self.p.make_tree_name(d)
+        tree_name = cl.make_tree_name(d)
         oneliner = "%s:%s" % (tree_name, locus)
         expected = [(r, oneliner) for r in reversed(xrange(1, 6))]
         dupes = self.p.duplicate_oneliner(1, oneliner, 5)
@@ -157,7 +157,7 @@ class TestProcess(unittest.TestCase):
 class TestPhymlMethods(unittest.TestCase):
 
     def setUp(self):
-        self.phyml = cloudforest.Phyml('alignments/phylip_primates/chr1_1036.phylip', pth='../binaries')
+        self.phyml = cl.Phyml('alignments/phylip_primates/chr1_1036.phylip', pth='../binaries')
 
     def test_model_statements(self):
         """[Phyml] Model templates are correct"""
@@ -243,5 +243,29 @@ class TestPhymlMethods(unittest.TestCase):
         self.assertAlmostEqual(distance, 0.0, 2)
         self.assertAlmostEqual(float(observed[0]), float(expected[0]), 4)
 
+
+class TestCoreFunctions(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def test_format_oneliner_from_dict(self):
+        d = {
+                'gor_gor': '---ATCATAGTTGAA',
+                'oto_gar': 'GTAATCATAGTTGAA'
+            }
+        observed = cl.format_oneliner_from_dict(d, 'test')
+        expected = 'chrm=test:gor_gor,---ATCATAGTTGAA,oto_gar,GTAATCATAGTTGAA;'
+        assert observed == expected
+
+    def test_phyml_to_oneliner(self):
+        phylip = open('alignments/phylip_primates/chr1_1036.phylip', 'rU').read()
+        observed = cl.phylip_to_oneliner(phylip, 'chr1_1036')
+        expected = cPickle.load(open('pickles/expected_oneliner_from_phylip.pickle'))
+        assert observed == expected
+
+
 if __name__ == '__main__':
     unittest.main()
+    #fast = unittest.TestLoader().loadTestsFromTestCase(TestCoreFunctions)
+    #unittest.TextTestRunner().run(fast)
