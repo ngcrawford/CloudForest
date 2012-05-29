@@ -6,10 +6,7 @@ from core import Process
 
 
 class ProcessPhyloData(MRJob, Process):
-    """
-    Main class for MrJob. Subclasses Process from cloudforest
-    which is shared with cloudforest_mpi.
-    """
+    """Main class for MrJob. Subclasses Process() from core.py"""
     def __init__(self, args):
         MRJob.__init__(self, args=args)
         # self.binaries = resource_filename(__name__, 'binaries')
