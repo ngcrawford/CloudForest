@@ -12,10 +12,11 @@ Description:
 """
 
 import os
+import sys
 import glob
 import argparse
 import numpy as np
-from core import Phyml, is_dir, FullPaths, phylip_to_oneliner, split_oneliner, oneliner_to_array, get_bootstraps, array_to_oneliner, oneliner_to_phylip
+from core import Phyml, is_dir, is_file, FullPaths, phylip_to_oneliner, split_oneliner, oneliner_to_array, get_bootstraps, array_to_oneliner, oneliner_to_phylip
 
 import pdb
 
@@ -37,7 +38,7 @@ def get_args():
             help="""Help text""",
         )
     parser.add_argument(
-            "type",
+            "run",
             choices=['genetrees', 'bootstraps', 'both'],
             default=None,
             help="""Help text""",
@@ -48,12 +49,24 @@ def get_args():
             help="""Help text""",
         )
     parser.add_argument(
+            "--genetrees",
+            action=FullPaths,
+            type=is_file,
+            default=None,
+            help="""Help text""",
+        )
+    parser.add_argument(
             "--bootreps",
             type=int,
             default=5,
             help="""Help text""",
         )
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    if args.run == 'bootstraps' and args.genetrees is None:
+        sys.exit("\nIf runnning only boostraps, you must pass a genetrees file")
+
+    return args
 
 
 def make_tree_name(args_dict):
@@ -65,20 +78,31 @@ def make_tree_name(args_dict):
     return name
 
 
-def genetree_worker(params):
-    locus, opts = params
-    name, phylip = locus
-    pth = opts
-    args_dict = {}
-    phyml = Phyml(phylip, pth)
-    model, tree = phyml.best_aicc_model_and_tree()
-    args_dict['chrm'] = name
-    args_dict['model'] = model
-    tree = "tree '%s' = [&U] %s" % (make_tree_name(args_dict), tree)
-    return (name, model, tree)
+def generate_bootreps(bootreps, phyml, oneliners):
+    """Replicate the data set bootrep numer of times, prior to bootstrapping"""
+    # keep bootrep numbers indexed by one
+    for i in xrange(1, bootreps + 1):
+        yield i, phyml, oneliners
+
+
+def get_models_from_genetrees(genetrees):
+    """Iterate over a set of precomputed genetrees and return the models in metadata"""
+    # iterate over genetrees to grab models
+    models = {}
+    for line, tree in enumerate(open(genetrees, 'rU')):
+        ts = tree.split(' ')[1].strip("'")
+        for item in ts.split(','):
+            if item.startswith('chrm'):
+                locus = item.split('=')[1]
+            elif item.startswith('model'):
+                model = item.split('=')[1]
+        models[locus] = model
+    assert len(models) == line + 1, "Not all loci have a model"
+    return models
 
 
 def get_bootstrap_replicates(multilocus_bstrap):
+    """Boostrap the bases of all alignments in a resampled population of alignments"""
     for locus in multilocus_bstrap:
         # split keys from alignments
         args_dict, locus = split_oneliner(locus)
@@ -96,12 +120,27 @@ def get_bootstrap_replicates(multilocus_bstrap):
         yield oneliner
 
 
+def genetree_worker(params):
+    """Worker function to compute genetrees for individual loci"""
+    locus, opts = params
+    name, phylip = locus
+    pth = opts
+    args_dict = {}
+    phyml = Phyml(phylip, pth)
+    model, tree = phyml.best_aicc_model_and_tree()
+    args_dict['chrm'] = name
+    args_dict['model'] = model
+    tree = "tree '%s' = [&U] %s" % (make_tree_name(args_dict), tree)
+    return (name, model, tree)
+
+
 def bootstrap_worker(params):
+    """Worker function to compute boostrap replicates of datasets and indiv. loci"""
     bootstrap_trees = []
     rep, pth, oneliners = params
-    # first, bootstrap across loci
+    # first, resample w/ replacement/bootstrap across loci
     multilocus_bstrap = get_bootstraps(oneliners)
-    # second, bootstrap bases within loci
+    # Resample w/ replacement/boostrap bases within loci
     bootstraps = get_bootstrap_replicates(multilocus_bstrap)
     for oneliner in bootstraps:
         args_dict, locus = split_oneliner(oneliner, default_model=True)
@@ -115,9 +154,19 @@ def bootstrap_worker(params):
     return bootstrap_trees
 
 
-def generate_bootstrap_params(bootreps, phyml, oneliners):
-    for i in xrange(bootreps):
-        yield i, phyml, oneliners
+def boostrap_all_loci(args, models, alns):
+    oneliners = [phylip_to_oneliner(phylip, locus, models[locus]) \
+                for locus, phylip in alns.iteritems()]
+    # for every rep in boostraps, map loci onto worker that will
+    # bootstrap, run phyml, and return bootstrap trees
+    params = generate_bootreps(args.bootreps, args.phyml, oneliners)
+    bootreps = map(bootstrap_worker, params)
+    # write
+    outname = "%s-bootreps.tree" % (args.bootreps)
+    outf = open(os.path.join(args.output, outname), 'w')
+    for bootrep in bootreps:
+        for tree in bootrep:
+            outf.write("%s\n" % (tree))
 
 
 def main():
@@ -126,31 +175,27 @@ def main():
     alns = {}
     for f in glob.glob(os.path.join(args.input, '*.phy*')):
         alns[os.path.splitext(os.path.basename(f))[0]] = open(f, 'rU').read()
+    # replicate our options for passing to map()
     opts = [args.phyml for i in range(len(alns))]
-    if args.type == 'genetrees' or args.type == 'both':
+    # compute genetrees
+    if args.run == 'genetrees' or args.run == 'both':
         params = zip(alns.items(), opts)
         genetrees = map(genetree_worker, params)
+        # write genetrees to output file
         outf = open(os.path.join(args.output, 'genetrees.tre'), 'w')
         for tree in genetrees:
             outf.write("%s\n" % (tree[2]))
         outf.close()
-    if args.type == 'both':
+    # compute bootreps on genetrees from above
+    if args.run == 'both':
+        # get models for each locus based on genetrees in-memory
         models = dict([[tree[0], tree[1]] for tree in genetrees])
-        oneliners = [phylip_to_oneliner(phylip, locus, models[locus]) \
-                for locus, phylip in alns.iteritems()]
-        # for every rep in boostraps, map loci onto worker that will
-        # bootstrap, run phyml, and return bootstrap trees
-        params = generate_bootstrap_params(args.bootreps, args.phyml, oneliners)
-        bootreps = map(bootstrap_worker, params)
-        # write
-        outname = "%s-bootreps.tree" % (args.bootreps)
-        outf = open(os.path.join(args.output, outname), 'w')
-        for bootrep in bootreps:
-            for tree in bootrep:
-                outf.write("%s\n" % (tree))
-    if args.type == 'bootstraps':
-        # ensure we have bootstrap file
-        pass
+        boostrap_all_loci(args, models, alns)
+    # compute bootreps on genetrees from a file
+    if args.run == 'bootstraps':
+        # get models for each locus based on genetrees in genetree file
+        models = get_models_from_genetrees(args.genetrees)
+        boostrap_all_loci(args, models, alns)
 
 
 if __name__ == '__main__':
