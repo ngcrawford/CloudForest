@@ -94,8 +94,6 @@ class TestCloudForestFunctions(unittest.TestCase):
         self.assertEqual(len(results), 15)
 
 
-
-        
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestCloudForestFunctions)
     unittest.TextTestRunner(verbosity=3).run(suite)
