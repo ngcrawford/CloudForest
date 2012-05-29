@@ -1,3 +1,17 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+"""
+File: cloudforest/cloudforest_emr.py
+
+Created by Nicholas G. Crawford
+Copyright (c) 2011-2012 Nicholas G. Crawford and Brant C. Faircloth. All rights reserved.
+
+Description: Compute genetrees and bootstrap replicates from a
+directory of phylip files input on the CLI using Amazon Elastic
+Map Reduce (EMR) or a local Hadoop cluster.
+
+"""
 
 from mrjob.job import MRJob
 from mrjob.protocol import RawValueProtocol

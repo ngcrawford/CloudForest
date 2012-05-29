@@ -7,7 +7,8 @@ Author: Brant Faircloth
 Created by Brant Faircloth on 12 May 2012 10:05 PDT (-0700)
 Copyright (c) 2012 Brant C. Faircloth. All rights reserved.
 
-Description: 
+Description: Compute genetrees and bootstrap replicates from a
+directory of phylip files input on the CLI using MPI.
 
 """
 
@@ -18,7 +19,7 @@ import argparse
 import numpy as np
 from core import Phyml, is_dir, is_file, FullPaths, phylip_to_oneliner, split_oneliner, oneliner_to_array, get_bootstraps, array_to_oneliner, oneliner_to_phylip
 
-import pdb
+#import pdb
 
 
 def get_args():

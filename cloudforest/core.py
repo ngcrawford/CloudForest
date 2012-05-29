@@ -3,7 +3,6 @@
 
 """
 File: cloudforest/core.py
-Author: Brant Faircloth
 
 Created by Nicholas G. Crawford and Brant C. Faircloth
 Copyright (c) 2011-2012 Nicholas G. Crawford and Brant C. Faircloth. All rights reserved.
@@ -14,7 +13,6 @@ Description: Core functions for cloudforest
 
 import os
 import re
-import glob
 import shutil
 import argparse
 import platform
@@ -22,7 +20,7 @@ import tempfile
 import subprocess
 import numpy as np
 
-import pdb
+#import pdb
 
 
 def is_dir(dirname):
