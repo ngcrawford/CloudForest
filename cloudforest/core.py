@@ -33,6 +33,14 @@ def is_dir(dirname):
         return dirname
 
 
+def is_file(filename):
+    if not os.path.isfile:
+        msg = "{0} is not a file".format(filename)
+        raise argparse.ArgumentTypeError(msg)
+    else:
+        return filename
+
+
 def format_oneliner_from_dict(taxa_seq_dict, name, model=None):
     assert len(taxa_seq_dict) > 0, ValueError("Phylip file has no content")
     seq = ['%s,%s' % (k, v) for k, v in taxa_seq_dict.iteritems()]
@@ -144,7 +152,7 @@ def make_tree_name(args_dict):
 
 
 def split_oneliner(line, args_dict=None, default_model=False):
-    """From a oneline, split locus/taxon info into dict and locus into string
+    """From a oneliner, split locus/taxon info into dict and locus into string
 
     Returns dict or tuple(dict, locus)
 
