@@ -155,6 +155,7 @@ def bootstrap_worker(params):
 
 
 def boostrap_all_loci(args, models, alns):
+    """Compute trees from bootstrap replicates of a dataset"""
     oneliners = [phylip_to_oneliner(phylip, locus, models[locus]) \
                 for locus, phylip in alns.iteritems()]
     # for every rep in boostraps, map loci onto worker that will
