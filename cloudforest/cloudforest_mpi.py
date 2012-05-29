@@ -62,6 +62,13 @@ def get_args():
             default=100,
             help="""The number of bootstrap replicates to run.""",
         )
+    parser.add_argument(
+            "--parallelism",
+            choices=['mpi', 'multiprocessing', 'single'],
+            default='mpi',
+            help="""The type of parallelism to use.""",
+        )
+
     args = parser.parse_args()
 
     if args.run == 'bootstraps' and args.genetrees is None:
@@ -178,11 +185,11 @@ def main():
     alns = {}
     for f in glob.glob(os.path.join(args.input, '*.phy*')):
         alns[os.path.splitext(os.path.basename(f))[0]] = open(f, 'rU').read()
-
     # replicate our options for passing to map()
     opts = [args.phyml for i in range(len(alns))]
     # compute genetrees
     if args.run == 'genetrees' or args.run == 'both':
+        sys.stdout.write("Running genetrees...\n")
         params = zip(alns.items(), opts)
         genetrees = mmap(genetree_worker, params)
         # write genetrees to output file
@@ -192,25 +199,29 @@ def main():
         outf.close()
     # compute bootreps on genetrees from above
     if args.run == 'both':
+        sys.stdout.write("Running boostraps of genetrees...\n")
         # get models for each locus based on genetrees in-memory
         models = dict([[tree[0], tree[1]] for tree in genetrees])
         boostrap_all_loci(args, models, alns)
     # compute bootreps on genetrees from a file
     if args.run == 'bootstraps':
+        sys.stdout.write("Running boostraps...\n")
         # get models for each locus based on genetrees in genetree file
         models = get_models_from_genetrees(args.genetrees)
         boostrap_all_loci(args, models, alns)
 
 
 if __name__ == '__main__':
-    from deap.dtm import map as mmap
-    from deap.dtm import start
-    start(main)
-    
-    #from multiprocessing import Pool
-    #pool = Pool(4)
-    #mmap = pool.map
-
-    #mmap = map
-    #main()
-    
+    args = get_args()
+    if args.parallelism == 'mpi':
+        from deap.dtm import map as mmap
+        from deap.dtm import start
+        start(main)
+    elif args.parallelism == 'multiprocessing':
+        from multiprocessing import Pool
+        pool = Pool(7)
+        mmap = pool.map
+        main()
+    elif args.parallelism == 'single':
+        mmap = map
+        main()
