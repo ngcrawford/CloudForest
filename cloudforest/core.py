@@ -16,6 +16,7 @@ import os
 import re
 import glob
 import shutil
+import argparse
 import platform
 import tempfile
 import subprocess
@@ -24,101 +25,178 @@ import numpy as np
 import pdb
 
 
+def is_dir(dirname):
+    if not os.path.isdir(dirname):
+        msg = "{0} is not a directory".format(dirname)
+        raise argparse.ArgumentTypeError(msg)
+    else:
+        return dirname
+
+
+def format_oneliner_from_dict(taxa_seq_dict, name, model=None):
+    assert len(taxa_seq_dict) > 0, ValueError("Phylip file has no content")
+    seq = ['%s,%s' % (k, v) for k, v in taxa_seq_dict.iteritems()]
+    if not model:
+        return "chrm=%s:%s;" % (name.strip(), ','.join(seq))
+    else:
+        return "chrm=%s,model=%s:%s;" % (name.strip(), model, ','.join(seq))
+
+
+def phylip_to_oneliner(phylip, locus, model=None):
+    taxa_id_dict, taxa_seq_dict = {}, {}
+    count = 0
+    for lineno, line in enumerate(phylip.split('\n')):
+        # skip blank lines
+        if len(line.strip()) == 0:
+            continue
+        if lineno == 0:
+            taxa_count, align_len = [int(i) for i in line.strip().split()]
+        # INITIALIZE DICTS WITH TAXA ID'S AND INITIAL SEQS
+        if 0 < count <= taxa_count:
+            name = line[:11].strip()
+            sequence = line[10:].strip()
+            taxa_id_dict[count] = name
+            taxa_seq_dict[name] = sequence.replace(' ', '')
+        # ADD ADDITIONAL LINES TO ALIGNMENT
+        if count > taxa_count:
+            num = count % taxa_count
+            if num == 0:
+                num = max(taxa_id_dict.keys())
+            name = taxa_id_dict[num]
+            taxa_seq_dict[name] += line.strip().replace(' ', '')
+        count += 1
+    oneliner = format_oneliner_from_dict(taxa_seq_dict, locus, model)
+    return oneliner
+
+
+def oneliner_to_phylip(line):
+    """Convert one-liner to phylip format."""
+    seqs = line.strip(";\n").split(',')
+    label_seqs = zip(seqs[:-1:2], seqs[1::2])
+    taxa_count = len(label_seqs)
+    seq_length = len(label_seqs[0][1])
+    # add header
+    header = "%s %s\n" % (taxa_count, seq_length)
+    alignment = '\n'.join(['%-10s%s' % (i[0].strip(), i[1]) for i in label_seqs])
+    return header + alignment
+
+
+def get_bootstraps(sample, replicates=1, return_choices=False):
+    """Create boostrapped replicates of an a numpy array.
+
+    Returns list
+
+    """
+    if not isinstance(sample, np.ndarray):
+        try:
+            sample = np.array(sample)
+        except:
+            raise TypeError("bootstrap() input must be list or numpy.ndarray")
+    #replicates = int(replicates)
+    size = len(sample)
+    if replicates == 1:
+        choices = np.random.random_integers(0, size - 1, size)
+        if not return_choices:
+            return sample[choices].tolist()
+        else:
+            return sample[choices].tolist(), choices
+
+    else:
+        return [sample[np.random.random_integers(0, size - 1, size)].tolist()
+                        for i in xrange(replicates)]
+
+
+def oneliner_to_array(line):
+    """Convert oneliner to 2d numpy array.
+
+    Returns tuple(list, array)
+
+    """
+    seqs = line.split(",")
+    label_seqs = zip(seqs[:-1:2], seqs[1::2])
+    taxa, bases = [], []
+    for taxon, seq in label_seqs:
+        bases.append(list(seq))
+        taxa.append(taxon.strip())
+    return taxa, np.array(bases)
+
+
+def array_to_oneliner(taxa, bases):
+    """Convert array of array of taxa and an array of bases to one-liner.
+
+    Returns string
+
+    """
+    # join is faster and cleaner than concatenate
+    # list comp is faster than for
+    # enumerate gets index of taxon from taxa
+    oneliner = ','.join([','.join([taxa[count], seq.tostring()]) for count, seq in enumerate(bases)])
+    return oneliner
+
+
+def make_tree_name(args_dict):
+    """Converts dictionary of arguement into a sorted string with the
+    format:  """
+    # join is faster and cleaner than concatenate
+    # list comp is faster than for
+    name = ','.join(['='.join([pair[0], pair[1]]) for pair in sorted(args_dict.items())])
+    return name
+
+
+def split_oneliner(line, args_dict=None, default_model=False):
+    """From a oneline, split locus/taxon info into dict and locus into string
+
+    Returns dict or tuple(dict, locus)
+
+    """
+    if not args_dict:
+        args_dict = {}
+    if ':' in line:
+        args, locus = line.split(":")
+        args = args.split(',')
+        for item in args:
+            dict_key, value = item.split("=")
+            args_dict[dict_key] = value
+    else:
+        locus = line
+    if default_model:
+        if 'model' not in args_dict.keys():
+            args_dict['model'] = 'GTR'
+    return args_dict, locus
+
+
+class FullPaths(argparse.Action):
+    """Expand user- and relative-paths"""
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, os.path.abspath(os.path.expanduser(values)))
+
+
 class Process():
     """ """
     def __init__(self):
         pass
 
-    def oneliner_to_phylip(self, line):
-        """Convert one-liner to phylip format."""
-        seqs = line.strip(";\n").split(',')
-        label_seqs = zip(seqs[:-1:2], seqs[1::2])
-        taxa_count = len(label_seqs)
-        seq_length = len(label_seqs[0][1])
-        # add header
-        header = "%s %s\n" % (taxa_count, seq_length)
-        alignment = '\n'.join(['%-10s%s' % (i[0].strip(), i[1]) for i in label_seqs])
-        return header + alignment
-
-    def get_bootstraps(self, sample, replicates=1, return_choices=False):
-        """Create boostrapped replicates of an a numpy array.
-
-        Returns list
-
-        """
-        if not isinstance(sample, np.ndarray):
-            try:
-                sample = np.array(sample)
-            except:
-                raise TypeError("bootstrap() input must be list or numpy.ndarray")
-        #replicates = int(replicates)
-        size = len(sample)
-        if replicates == 1:
-            choices = np.random.random_integers(0, size - 1, size)
-            if not return_choices:
-                return sample[choices].tolist()
-            else:
-                return sample[choices].tolist(), choices
-
-        else:
-            return [sample[np.random.random_integers(0, size - 1, size)].tolist()
-                            for i in xrange(replicates)]
-
-    def oneliner_to_array(self, line):
-        """Convert oneliner to 2d numpy array.
-
-        Returns tuple(list, array)
-
-        """
-        seqs = line.split(",")
-        label_seqs = zip(seqs[:-1:2], seqs[1::2])
-        taxa, bases = [], []
-        for taxon, seq in label_seqs:
-            bases.append(list(seq))
-            taxa.append(taxon.strip())
-        return taxa, np.array(bases)
-
-    def array_to_oneliner(self, taxa, bases):
-        """Convert array of array of taxa and an array of bases to one-liner.
-
-        Returns string
-
-        """
-        # join is faster and cleaner than concatenate
-        # list comp is faster than for
-        # enumerate gets index of taxon from taxa
-        oneliner = ','.join([','.join([taxa[count], seq.tostring()]) for count, seq in enumerate(bases)])
-        return oneliner
-
     def get_bootstrap_replicates(self, key, line):
         loci = line.strip().split(';')
         loci = loci[:-1]
         # first, bootstrap across loci
-        multilocus_bstrap = self.get_bootstraps(loci)
+        multilocus_bstrap = get_bootstraps(loci)
         # second, bootstrap bases within loci
         for locus in multilocus_bstrap:
             # split keys from alignments
-            args_dict, locus = self.split_oneliner(locus)
+            args_dict, locus = split_oneliner(locus)
             # convert alignments to arrays
-            taxa, numpy_alignment = self.oneliner_to_array(locus)
+            taxa, numpy_alignment = oneliner_to_array(locus)
             # transpose so we bootstrap by columns
             bases_by_col = np.column_stack(numpy_alignment)
             # bootstrap by columns
-            shuffled = self.get_bootstraps(bases_by_col)
+            shuffled = get_bootstraps(bases_by_col)
             # transpose back to rows of sequences
             shuffled = np.column_stack(shuffled)
             # convert back to oneliner
-            oneliner = self.array_to_oneliner(taxa, shuffled)
-            oneliner = "%s:%s" % (self.make_tree_name(args_dict), oneliner)
+            oneliner = array_to_oneliner(taxa, shuffled)
+            oneliner = "%s:%s" % (make_tree_name(args_dict), oneliner)
             yield key, oneliner
-
-    def make_tree_name(self, args_dict):
-        """Converts dictionary of arguement into a sorted string with the
-        format:  """
-        # join is faster and cleaner than concatenate
-        # list comp is faster than for
-        name = ','.join(['='.join([pair[0], pair[1]]) for pair in sorted(args_dict.items())])
-        return name
 
     def process_stats_file(self, fin):
         """"given an input phyml stats file, return the log-likelihood of the tree"""
@@ -132,35 +210,14 @@ class Process():
             raise ValueError("No Log-likelihood found")
         return float(result.groups()[0])
 
-    def split_oneliner(self, line, args_dict=None, default_model=False):
-        """From a oneline, split locus/taxon info into dict and locus into string
-
-        Returns dict or tuple(dict, locus)
-
-        """
-        if not args_dict:
-            args_dict = {}
-        if ':' in line:
-            args, locus = line.split(":")
-            args = args.split(',')
-            for item in args:
-                dict_key, value = item.split("=")
-                args_dict[dict_key] = value
-        else:
-            locus = line
-        if default_model:
-            if 'model' not in args_dict.keys():
-                args_dict['model'] = 'GTR'
-        return args_dict, locus
-
     def get_genetrees(self, key, line, pth='bin', genetrees=True, no_model=False):
         """Compute genetrees using model in oneliner. Parses out evolutionary
          model if provided as first word in file.  Otherwise, runs GTR."""
         # TODO:  Why is this here?
         if len(line.split("\t")) == 2:
             key, line = line.split("\t")
-        args_dict, locus = self.split_oneliner(line, default_model=True)
-        phylip = self.oneliner_to_phylip(locus)
+        args_dict, locus = split_oneliner(line, default_model=True)
+        phylip = oneliner_to_phylip(locus)
         phyml = Phyml(phylip, pth)
         # run phyml.  if no model, defaults to GTR
         # TOOD: Why do we need LnL?
@@ -171,7 +228,7 @@ class Process():
         except:
             gtrees = genetrees
         if gtrees == True and no_model == False:
-            yield key, "tree '%s' = [&U] %s" % (self.make_tree_name(args_dict), tree)
+            yield key, "tree '%s' = [&U] %s" % (make_tree_name(args_dict), tree)
         else:
             yield key, tree
 
@@ -180,18 +237,18 @@ class Process():
         generator of genetrees and/or oneliner with models integrated"""
         # TODO: move into separate line_cleaner function?
         oneliner = line.split("\t")[-1].strip('\n')
-        args_dict, locus = self.split_oneliner(line)
-        phylip = self.oneliner_to_phylip(locus)
+        args_dict, locus = split_oneliner(line)
+        phylip = oneliner_to_phylip(locus)
         phyml = Phyml(phylip, pth)
         model, tree = phyml.best_aicc_model_and_tree()
         args_dict['model'] = model
-        oneliner = "%s:%s" % (self.make_tree_name(args_dict), oneliner.split(":")[-1])
+        oneliner = "%s:%s" % (make_tree_name(args_dict), oneliner.split(":")[-1])
         try:
             gtrees = self.options.gene_trees
         except AttributeError:
             gtrees = genetrees
         if gtrees == True:
-            yield key, "tree '%s' = [&U] %s" % (self.make_tree_name(args_dict), tree)
+            yield key, "tree '%s' = [&U] %s" % (make_tree_name(args_dict), tree)
         else:
             yield 1, oneliner
 
@@ -215,10 +272,13 @@ class Process():
 
 class Phyml:
     """Use phyml to generate trees or help select models"""
-    def __init__(self, phylip, pth='bin', exe=None):
+    def __init__(self, phylip, pth='bin', temp_dir=None, exe=None):
         self.cwd = os.getcwd()
-        # generate a tempdir in which we'll work
-        working = tempfile.mkdtemp(dir='tmp')
+        if not temp_dir:
+            working = tempfile.mkdtemp()
+        else:
+            # generate a tempdir in which we'll work
+            working = tempfile.mkdtemp(dir=temp_dir)
         self.working = os.path.abspath(working)
         # if we get a file for phylip var, put in tempdir
         if os.path.exists(phylip):
@@ -451,3 +511,4 @@ class Phyml:
         # move back to cwd
         os.chdir(self.cwd)
         return str(lnl), tree
+
