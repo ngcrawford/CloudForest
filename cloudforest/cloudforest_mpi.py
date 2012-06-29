@@ -17,6 +17,7 @@ import sys
 import glob
 import argparse
 import numpy as np
+from time import localtime, strftime
 from core import Phyml, is_dir, is_file, FullPaths, phylip_to_oneliner, split_oneliner, oneliner_to_array, get_bootstraps, array_to_oneliner, oneliner_to_phylip
 
 #import pdb
@@ -139,6 +140,12 @@ def genetree_worker(params):
     args_dict['chrm'] = name
     args_dict['model'] = model
     tree = "tree '%s' = [&U] %s" % (make_tree_name(args_dict), tree)
+    sys.stdout.write("[Info] {0} {1} genetree completed\n".format(
+                strftime("%a, %d %b %Y %H:%M:%S", localtime()),
+                name
+            )
+        )
+    sys.stdout.flush()
     return (name, model, tree)
 
 
@@ -160,6 +167,12 @@ def bootstrap_worker(params):
         args_dict['lnL'], tree = phyml.run(args_dict['model'])
         #bootstrap_trees.append("tree '%s' = [&U] %s" % (make_tree_name(args_dict), tree))
         bootstrap_trees.append('''%s\t"%s"''' % (rep, tree))
+    sys.stdout.write("[Info] {0} {1} bootstrap completed\n".format(
+            strftime("%a, %d %b %Y %H:%M:%S", localtime()),
+            args_dict['chrm']
+        )
+    )
+    sys.stdout.flush()
     return bootstrap_trees
 
 
@@ -189,7 +202,7 @@ def main():
     opts = [args.phyml for i in range(len(alns))]
     # compute genetrees
     if args.run == 'genetrees' or args.run == 'both':
-        sys.stdout.write("Running genetrees...\n")
+        sys.stdout.write("Running genetrees...\n\n")
         params = zip(alns.items(), opts)
         genetrees = mmap(genetree_worker, params)
         # write genetrees to output file
