@@ -460,7 +460,12 @@ class Phyml:
             statfile, treefile = self._runner(phylip, model)
             lnl = self._get_log_like(statfile, self.ll, phylip)
             self.lnl_results[model_name] = lnl
-            aicc = self._compute_aicc(model_name, lnl)
+            try:
+                aicc = self._compute_aicc(model_name, lnl)
+            except ZeroDivisionError:
+                txt = "An alignment is shorter than necessary to compute AICc. " + \
+                    "Ensure alignments are longer than (# taxa + 10)."
+                raise IOError(txt)
             tree = self._get_tree(treefile)
             self.aicc_results[aicc] = [model_name, tree]
         # move back to cwd
