@@ -59,8 +59,10 @@ def phylip_to_oneliner(phylip, locus, model=None):
             taxa_count, align_len = [int(i) for i in line.strip().split()]
         # INITIALIZE DICTS WITH TAXA ID'S AND INITIAL SEQS
         if 0 < count <= taxa_count:
-            name = line[:11].strip()
-            sequence = line[10:].strip()
+            # clean up errant spaces
+            sp = [val for val in line.split(' ') if val != '']
+            name = sp[0]
+            sequence = ''.join(sp[1:])
             taxa_id_dict[count] = name
             taxa_seq_dict[name] = sequence.replace(' ', '')
         # ADD ADDITIONAL LINES TO ALIGNMENT
@@ -81,9 +83,11 @@ def oneliner_to_phylip(line):
     label_seqs = zip(seqs[:-1:2], seqs[1::2])
     taxa_count = len(label_seqs)
     seq_length = len(label_seqs[0][1])
+    # pad all names to length of longest name + 1 space
+    max_name_length = max([len(val) for val in seqs[:-1:2]]) + 1
     # add header
     header = "%s %s\n" % (taxa_count, seq_length)
-    alignment = '\n'.join(['%-10s%s' % (i[0].strip(), i[1]) for i in label_seqs])
+    alignment = '\n'.join(['%s%s' % (i[0].ljust(max_name_length), i[1]) for i in label_seqs])
     return header + alignment
 
 
