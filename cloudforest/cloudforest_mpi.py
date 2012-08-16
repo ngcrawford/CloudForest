@@ -69,6 +69,12 @@ def get_args():
             default='mpi',
             help="""The type of parallelism to use.""",
         )
+    parser.add_argument(
+            "--cores",
+            type=int,
+            default=7,
+            help="""The number of compute cores to use.""",
+        )
 
     args = parser.parse_args()
 
@@ -232,7 +238,7 @@ if __name__ == '__main__':
         start(main)
     elif args.parallelism == 'multiprocessing':
         from multiprocessing import Pool
-        pool = Pool(7)
+        pool = Pool(args.cores)
         mmap = pool.map
         main()
     elif args.parallelism == 'single':
