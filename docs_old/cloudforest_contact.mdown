@@ -1,0 +1,25 @@
+CloudForest was designed and implemented by [Nicholas Crawford][1] help from [Brant Faircloth][2].
+
+[Travis Glenn][3], [John McCormack][4], [Robb Brumfield][5] all contributed ideas and suggestions.
+
+Contact Details:
+
+* Email:ngcrawford@gmail.com
+* Website:www.ngcrawford.com
+
+Support:
+
+This work was supported by an [Amazon Education Grant][6] and grants from [NSF][7]
+
+![NSF][8]
+
+[1]: www.ngcrawford.com
+[2]: http://b.atcg.us/
+[3]: travisg.myweb.uga.edu/Site/Welcome.html
+[4]: http://faculty.oxy.edu/mccormack/
+[5]: www.museum.lsu.edu/brumfield.html
+[6]: http://aws.amazon.com/education/
+[7]: http://www.nsf.gov/
+[8]: http://www.nsf.gov/pubs/1999/nsf99167/image8.gif "NSF"
+
+WIDTH=59 HEIGHT=59
