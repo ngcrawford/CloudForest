@@ -1,0 +1,31 @@
+Metadata-Version: 1.0
+Name: rpy2
+Version: 2.2.6
+Summary: 
+About rpy2
+==========
+
+Rpy2 is a Python interface to the R language, mainly constitutued
+of a low-level interface (rpy2.rinterface) close to R's C-level API
+and a high-level interface with convenience classes and features
+(rpy2.robjects).
+
+The high-level interface is implemented using the low-level interface
+and other high-level interfaces are possible. The original rpy interface
+can be implemented with the low-level interface (rpy2.rpy_classic) 
+
+
+Home-page: http://rpy.sourceforge.net
+Author: Laurent Gautier
+Author-email: lgautier@gmail.com
+License: AGPLv3.0 (except rpy2.rinterface: LGPL)
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)
+Classifier: License :: OSI Approved :: GNU Affero General Public License v3
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: Development Status :: 5 - Production/Stable
