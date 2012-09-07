@@ -367,13 +367,16 @@ def parseGenetrees(args):
     trees = []
 
     for count, line in enumerate(fin):
-        tree = 'tree'
+        #tree = 'tree'
+
         if is_nexus == True:  # this doesn't work properly.
             if len(line.strip().split("=")) == 2:
                 tree = line.strip().split("=")[-1]
                 tree = tree.strip()
             else: continue
+        
         else: tree = line.strip()
+        
         if "=" in tree:
             tree = tree.split('=')[-1].strip()
             tree = re.sub("\d+Ptero", 'Ptero', tree) # HOT FIX for ptero issue REMOVE!
@@ -381,11 +384,14 @@ def parseGenetrees(args):
         tree = tree.strip(";")
         tree = cleanPhyMLTree(tree)
         trees.append(tree)
-        if count == 0:
+        if count == 10:
             taxa = getTaxa(tree)
             if args.outgroup not in taxa:
                 print args.outgroup, 'not in taxa:', taxa
                 sys.exit()
+
+    print trees
+    print taxa
 
     star_tree, steac_tree = phybase(trees, args.outgroup, taxa)
 
@@ -423,7 +429,6 @@ def main():
         sys.exit()
 
     if args.bootstraps == True and args.sorted == False:
-
         parseBootreps(args)
 
     if args.genetrees == True:
