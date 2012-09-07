@@ -9,7 +9,7 @@ setup(
     author_email='ngcrawford@gmail.com',
     url='http://pypi.python.org/pypi/CloudForest/',
     license='LICENSE.txt',
-    description='Generate gene and species trees from thousands of loci using Map-Reduce.',
+    description='Generate gene and species trees from thousands of loci or across genomic alignments.',
     long_description=open('README.rst').read(),
     test_suite='tests',
     install_requires=[
@@ -17,6 +17,7 @@ setup(
         "flask >= 0.8",
         "flask-wtf >= 0.5.2",
         "numpy >= 1.6.1"
+        "rpy2 >= 2.2"
     ],
     packages=[
             'cloudforest',
@@ -37,4 +38,8 @@ setup(
             ]
         },
     include_package_data = True,
+    scripts = ['cloudforest/nexus2oneliner.py',
+               'cloudforest/phylip2oneliner.py',
+               'cloudforest/process.py'
+              ],
 )
