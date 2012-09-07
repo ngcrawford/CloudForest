@@ -123,7 +123,7 @@ class ProcessPhyloData(MRJob):
         of duplicated datasets equal to the number of replicates. One boostrap replicate is
         produced from the loci within each dataset, and one bootstap replicate is made on
         each locus of the bootstrapped loci. This speeds up the MapReduce algorithm 
-        by parallelizing the bootstrapping opperation.
+        by parallelizing the bootstrapping operation.
         
         This fuction also keeps the appropriate model of molecular evolution associated 
         with each locus.
