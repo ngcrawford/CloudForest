@@ -1,0 +1,198 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Quick Start: &mdash; CloudForest 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CloudForest 2.0.1 documentation" href="index.html" />
+    <link rel="next" title="&lt;no title&gt;" href="FAQ.html" />
+    <link rel="prev" title="CloudForest: Software for" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="FAQ.html" title="&lt;no title&gt;"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="CloudForest: Software for"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">CloudForest 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="quick-start">
+<h1>Quick Start:<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h1>
+<p>The first thing you need to do to get CloudForest running to get it installed. We&#8217;ve tried to make this as painless as possible by using package installers and , but you&#8217;ll still need to type some commands at the command line.</p>
+<ol class="arabic simple">
+<li>Open terminal.</li>
+</ol>
+<blockquote>
+<div>Prepare to cut-n-paste!</div></blockquote>
+<ol class="arabic simple" start="2">
+<li>Install <a class="reference external" href="http://www.python.org/">Python</a>.</li>
+</ol>
+<blockquote>
+<div>Python should already be installed on OS X or Linux. CloudForest requires version Python2.7 so enter <tt class="docutils literal"><span class="pre">python</span> <span class="pre">--version</span></tt> at the commandline and make sure you&#8217;re uptodate. If you&#8217;re not, I recommend installing <a href="#id1"><span class="problematic" id="id2">`Enthought Python`_</span></a> 2.7 which includes almost all the dependancies necessary to get CloudForest running.</div></blockquote>
+<ol class="arabic simple" start="3">
+<li>Install <a class="reference external" href="www.r-project.org/">R</a>.</li>
+</ol>
+<blockquote>
+<div>R is <em>the</em> open source statistical software package. You should be able to download and install a graphical package installer from the R website. We recommend using a recent version such as R 2.15 or greater.</div></blockquote>
+<ol class="arabic simple" start="4">
+<li>Install <a class="reference external" href="http://git-scm.com/">Git</a>.</li>
+</ol>
+<blockquote>
+<div><p>Git is a distributed version control systerm. It&#8217;s open source, easy to use, and integrates with github for easy collaboration and distribution.</p>
+<ul class="simple">
+<li>We recommend first installing <a class="reference external" href="http://mxcl.github.com/homebrew/">HomeBrew</a> and then running <tt class="docutils literal"><span class="pre">brew</span> <span class="pre">install</span> <span class="pre">git</span></tt> at the command line to install git.</li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="5">
+<li>Install <a class="reference external" href="http://pypi.python.org/pypi/pip">Pip</a>.</li>
+</ol>
+<blockquote>
+<div>Pip is a package installer for python that makes adding and managing packages and modules a breeze.</div></blockquote>
+<ol class="arabic simple" start="6">
+<li>Install <a class="reference external" href="http://github.com/ngcrawford/CloudForest">CloudForest</a> by running <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">cloudforest</span></tt> at the commandline. Alternately you can install the most cutting edge development version by running <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">git+git://github.com/ngcrawford/CloudForest.git</span></tt> at the commandline.</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>CloudForest&#8217;s <tt class="docutils literal"><span class="pre">setup.py</span></tt> script should install all the dependancies you need. However, Numpy can be troublesome. If you get errors when numpy is building you may need to install numpy manually. Running <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">numpy</span></tt> should do the trick.</li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="7">
+<li>Install <a class="reference external" href="http://code.google.com/p/phybase/">Phybase</a>.</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>First install <a class="reference external" href="http://ape.mpl.ird.fr/">ape</a> Phybase&#8217;s only dependancy.<ul>
+<li>To do this open R. At the R command line type: <tt class="docutils literal"><span class="pre">install.packages('ape')</span></tt>. Follow the instructions.</li>
+</ul>
+</li>
+<li>Then download the gziped <a class="reference external" href="http://phybase.googlecode.com/files/phybase_1.3.tar.gz">source code</a> for phybase.</li>
+<li><tt class="docutils literal"><span class="pre">cd</span></tt> to that directory and type <tt class="docutils literal"><span class="pre">R</span> <span class="pre">CMD</span> <span class="pre">INSTALL</span> <span class="pre">phybase_1.3.tar.gz</span></tt>. If the version of phybase is newer, you may have to adjust the gzip filename to refect this.</li>
+</ul>
+</div></blockquote>
+<p>That should do it for installation.</p>
+<div class="section" id="configure-software">
+<h2>Configure Software:<a class="headerlink" href="#configure-software" title="Permalink to this headline">¶</a></h2>
+<p>CloudForest itsself doesn&#8217;t require any configuration, but one of it&#8217;s dependancies does. <a class="reference external" href="https://github.com/Yelp/mrjob">MrJob</a> has a pretty simple config file you&#8217;ll need to setup if you want to run analyses on EMR. A full explaination is available <a class="reference external" href="http://packages.python.org/mrjob/writing-and-running.html">here</a>.</p>
+<p>You&#8217;ll need to make a mrjob.conf file. Mine looks something like this:</p>
+<div class="highlight-python"><pre>runners:
+  emr:
+    aws_access_key_id: YOURIDYOURIDYOURIDYOURIDYOURID
+    aws_region: us-east-1
+    aws_secret_access_key: YOURSECRETKEYYOURSECRETKEYYOURSECRETKEY
+    ec2_key_pair: mr-keypair
+    ec2_key_pair_file: /Users/YourUserName/.ssh/mr-keypair.pem
+    ec2_instance_type: m1.small
+    num_ec2_instances: 1
+    setup_cmds: &amp;setup_cmds
+    ssh_tunnel_is_open: true
+    ssh_tunnel_to_job_tracker: true</pre>
+</div>
+</div>
+<div class="section" id="test-the-installation">
+<h2>Test the Installation:<a class="headerlink" href="#test-the-installation" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>Run the UnitTests with <a class="reference external" href="http://nose.readthedocs.org/en/latest/">nose</a>.</li>
+</ol>
+<p>I&#8217;m not yet sure how to do this with an &#8216;installed package.&#8217;</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Quick Start:</a><ul>
+<li><a class="reference internal" href="#configure-software">Configure Software:</a></li>
+<li><a class="reference internal" href="#test-the-installation">Test the Installation:</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">CloudForest: Software for</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="FAQ.html"
+                        title="next chapter">&lt;no title&gt;</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/quick_start.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="FAQ.html" title="&lt;no title&gt;"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="CloudForest: Software for"
+             >previous</a> |</li>
+        <li><a href="index.html">CloudForest 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Nicholas Crawford and Brant Faircloth.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>
