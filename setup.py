@@ -16,21 +16,21 @@ setup(
         "mrjob >= 0.2.8",
         "flask >= 0.8",
         "flask-wtf >= 0.5.2",
-        "numpy >= 1.6.1"
+        "numpy >= 1.6.1",
         "rpy2 >= 2.2"
     ],
     packages=[
             'cloudforest',
-            'cloudforest.test',
+            'cloudforest.tests',
             'cloudforest.webapp',
             ],
     package_data = {
             '':['*.txt'],
             'cloudforest':[
-                'test/alignments/*.oneliners',
-                'test/alignments/*.phylip',
-                'test/alignments/nexus_primates/*',
-                'test/alignments/phylip_primates/*',
+                'tests/alignments/*.oneliners',
+                'tests/alignments/*.phylip',
+                'tests/alignments/nexus_primates/*',
+                'tests/alignments/phylip_primates/*',
                 'webapp/static/images/*',
                 'webapp/static/javascripts/*',
                 'webapp/static/stylesheets/*',
@@ -38,8 +38,9 @@ setup(
             ]
         },
     include_package_data = True,
-    scripts = ['cloudforest/nexus2oneliner.py',
-               'cloudforest/phylip2oneliner.py',
-               'cloudforest/process.py'
+    scripts = [
+              'cloudforest/nexus2oneliner.py',
+              'cloudforest/phylip2oneliner.py',
+              'cloudforest/process.py'
               ],
 )
