@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to CloudForest's documentation!
+CloudForest: Software for 
 =======================================
 
 Contents:
@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    quick_start.rst
+   FAQ.rst
 
 
 
