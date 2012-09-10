@@ -16,4 +16,4 @@ __maintainer__ = 'Nicholas G. Crawford'
 __email__ = 'ngcrawford _at_ gmail *dot* com'
 __status__ = 'testing'
 
-from process import *
+from core import *
