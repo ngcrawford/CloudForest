@@ -58,6 +58,13 @@ class ProcessPhyloData(MRJob, Process):
                 help='Use MrAIC to calculate models'
             )
 
+        self.add_passthrough_option(
+            '--constraint-tree', 
+            type='str', 
+            default='False',
+            help="""Provide a constraint tree as quoted 
+                    newick string. ex: --constraint-tree='((A,B),C);'""")
+
     def basic_reducer(self, key, line):
         """Do not reduce"""
         yield key, line
