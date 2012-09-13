@@ -41,6 +41,11 @@ class ProcessPhyloData(MRJob):
     
     def oneliner2phylip(self, line):
         """Convert one-liner to phylip format."""
+
+        # Remove additional info (e.g., chrm, model, etc.) from line
+        if ':' in line:
+            line = line.split(":")[-1]
+
         seqs = line.strip(";").split(',')
         label_seqs = zip(seqs[:-1:2],seqs[1::2])
         taxa_count = len(label_seqs)
