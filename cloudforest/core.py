@@ -234,13 +234,18 @@ class Process():
         """Compute genetrees using model in oneliner. Parses out evolutionary
          model if provided as first word in file.  Otherwise, runs GTR."""
         # TODO:  Why is this here?
+        #    EMR often adds extra tab chars in front of lines.
+        #    this fixes that particular edge case. (NGC)
+
         if len(line.split("\t")) == 2:
             key, line = line.split("\t")
         args_dict, locus = split_oneliner(line, default_model=True)
+
         phylip = oneliner_to_phylip(locus)
         phyml = Phyml(phylip, pth)
         # run phyml.  if no model, defaults to GTR
         # TOOD: Why do we need LnL?
+        #   For comparing the quality of topologies 
         args_dict['lnL'], tree = phyml.run(args_dict['model'])
         try:
             gtrees = self.options.gene_trees
