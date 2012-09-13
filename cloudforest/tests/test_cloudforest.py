@@ -15,7 +15,7 @@ import unittest
 import dendropy
 from context import cloudforest as cl
 
-import pdb
+# import pdb
 
 
 class TestProcess(unittest.TestCase):
@@ -137,9 +137,12 @@ class TestProcess(unittest.TestCase):
         obs_gen = self.p.get_genetrees_and_models(1, self.one, pth='../binaries', genetrees=True)
         exp_key, exp_tree = cPickle.load(open('pickles/expected_genetrees_and_model.pickle'))
         observed = [o for o in obs_gen]
+
         assert len(observed) == 1
         observed = observed[0]
         obs_key, obs_tree = observed
+        print obs_tree
+        print exp_tree
         assert obs_key == exp_key
         assert obs_tree == exp_tree
 
@@ -241,7 +244,7 @@ class TestPhymlMethods(unittest.TestCase):
         observed = self.phyml.run('GTR')
         distance = self.get_tree_distances(observed[1], expected[1])
         self.assertAlmostEqual(distance, 0.0, 2)
-        self.assertAlmostEqual(float(observed[0]), float(expected[0]), 4)
+        self.assertAlmostEqual(float(observed[0]), float(expected[0]), 2)
 
 
 class TestCoreFunctions(unittest.TestCase):
