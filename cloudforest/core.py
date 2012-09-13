@@ -79,8 +79,18 @@ def phylip_to_oneliner(phylip, locus, model=None):
 
 def oneliner_to_phylip(line):
     """Convert one-liner to phylip format."""
+    
+    # Problem: Phylip has a 10 char limit that is not accounted for. (NGC)
+    # "Strict Phylip expects the first character state to appear on Column 11 
+    #  for each and every sequence, no ifs, and, or buts."
+    # http://www.phylo.org/tools/phylip.html
+
+    # Remove additional info (e.g., chrm,model,etc.) from line (fixed above problem)
+    if ':' in line:
+        line = line.split(":")[-1]
     seqs = line.strip(";\n").split(',')
     label_seqs = zip(seqs[:-1:2], seqs[1::2])
+    print label_seqs
     taxa_count = len(label_seqs)
     seq_length = len(label_seqs[0][1])
     # pad all names to length of longest name + 1 space
@@ -282,7 +292,8 @@ class Process():
 
 class Phyml:
     """Use phyml to generate trees or help select models"""
-    def __init__(self, phylip, pth='bin', temp_dir=None, exe=None):
+    def __init__(self, phylip, pth='bin', temp_dir=None, exe=None, 
+                       starting_tree=None, constraint_tree=None):
         self.cwd = os.getcwd()
         if not temp_dir:
             working = tempfile.mkdtemp()
@@ -300,11 +311,20 @@ class Phyml:
                     )
         # if we get a string for a file, write to tempdir/tempfile
         elif type(phylip) == str:
-            fd, self.phylip = tempfile.mkstemp(dir=self.working, suffix='.phylip', text=True)
-            os.write(fd, phylip)
-            os.close(fd)
+            self.phylip = self._string_2_tempfile(string=phylip, suffix='phylip')
         else:
             raise TypeError("Input must be a phylip file or a phylip-formatted string")
+
+        if starting_tree != None:
+           self.starting_tree = self._string_2_tempfile(string=starting_tree, suffix='txt')
+
+        if constraint_tree != None and starting_tree == None:
+            raise Exception("A constraint tree also requires a starting tree.")
+
+        if constraint_tree != None:
+           self.constraint_tree = self._string_2_tempfile(string=constraint_tree, suffix='txt')
+
+
         self.phyml3 = self._get_phyml_pth(pth, exe)
         # container for model selection results
         self.aicc_results = None
@@ -376,6 +396,13 @@ class Phyml:
 
     def __repr__(self):
         return "<Phyml object of %s at %s>" % (os.path.basename(self.phylip), hex(id(self)))
+
+    def _string_2_tempfile(self,string,suffix):
+        """[Private] Create tempfile with data from string."""
+        fd, file_path = tempfile.mkstemp(dir=self.working, suffix=suffix, text=True)
+        os.write(fd, string)
+        os.close(fd)
+        return file_path
 
     def _get_phyml_pth(self, pth, exe):
         """[Private] Get path to phyml"""
