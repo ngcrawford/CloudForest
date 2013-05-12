@@ -245,7 +245,7 @@ class Process():
         phyml = Phyml(phylip, pth)
         # run phyml.  if no model, defaults to GTR
         # TOOD: Why do we need LnL?
-        #   For comparing the quality of topologies 
+        #   For comparing the quality of different trees 
         args_dict['lnL'], tree = phyml.run(args_dict['model'])
         try:
             gtrees = self.options.gene_trees

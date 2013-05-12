@@ -88,7 +88,7 @@ class ProcessPhyloData(MRJob, Process):
             # TODO rewrite as a single fuction outside of steps.
             def output_protocol(self):
                 return RawValueProtocol()
-            return [self.mr(mapper=self.get_genetrees, reducer=None)]
+            return [self.mr(mapper=self.get_genetrees, reducer=self.basic_reducer)]
 
 if __name__ == '__main__':
     ProcessPhyloData.run()

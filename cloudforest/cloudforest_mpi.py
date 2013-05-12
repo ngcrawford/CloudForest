@@ -15,6 +15,7 @@ directory of phylip files input on the CLI using MPI.
 import os
 import sys
 import glob
+import gzip
 import argparse
 import numpy as np
 from time import localtime, strftime
@@ -31,12 +32,14 @@ def get_args():
             "input",
             type=is_dir,
             action=FullPaths,
-            help="""The path to a directory of PHYLIP-formatted alignments."""
+            default=sys.stdin,
+            help="""The path to a directory of 'oneliner' alignments."""
         )
     parser.add_argument(
             "output",
             type=is_dir,
             action=FullPaths,
+            default=sys.stdout,
             help="""The path to a directory in which to store the output.""",
         )
     parser.add_argument(
@@ -82,6 +85,13 @@ def get_args():
         sys.exit("\nIf runnning only boostraps, you must pass a genetrees file")
 
     return args
+
+
+def prepare_PhyML():
+    print args
+
+def cleanup():
+    pass
 
 
 def make_tree_name(args_dict):
@@ -232,6 +242,8 @@ def main():
 
 if __name__ == '__main__':
     args = get_args()
+    #prepare_PhyML(args)
+
     if args.parallelism == 'mpi':
         from deap.dtm import map as mmap
         from deap.dtm import start

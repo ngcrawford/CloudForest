@@ -13,6 +13,7 @@ Contents:
 
    quick_start.rst
    FAQ.rst
+   gene_trees.rst
 
 
 
