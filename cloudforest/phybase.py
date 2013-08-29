@@ -13,17 +13,17 @@ to parse NJ trees from Paup and ML trees from PhyMl as the tree formats are slig
 Dependencies:
 
    dendropy - http://packages.python.org/DendroPy/tutorial/index.html
-   rpy2 - http://rpy.sourceforge.net/rpy2.html 
+   rpy2 - http://rpy.sourceforge.net/rpy2.html
    phybase - http://cars.desu.edu/faculty/lliu/research/phybase.html
 
 Future directions:
 
    - add commandline (optparse)
    - add NJtrees fuction
-   - Parsing of trees from Garli 
+   - Parsing of trees from Garli
    - Bootstrapping with Phybase
-   - Nexus output of Steac and Star trees 
-      - also png/svg output? 
+   - Nexus output of Steac and Star trees
+      - also png/svg output?
 """
 
 import os
@@ -41,9 +41,9 @@ import pdb
 
 def interface():
     """ create commandline interface for script"""
-    
+
     description="""
-    
+
 Phybase.py calculates species trees from gene trees.
 Phybase.py is actually a wrapper script that runs an R package
 of the same name (Liu & Yu 2010).
@@ -52,7 +52,7 @@ Dependancies:
 -------------
 
 Phybase R package: basic functions for phylogenetic analysis
-    Installation: 
+    Installation:
         At the R prompt type 'install.packages("Phybase")'
     Website: http://cran.r-project.org/web/packages/phybase/index.html
 
@@ -63,55 +63,66 @@ DendroPy: phylogenetic computing library:
 Rpy2: simple and efficient access to R from Python
     Installation: sudo easy_install -U rpy2
     Website: http://rpy.sourceforge.net/rpy2.html
-    
+
 Argparse: present in python 2.7 and later (I think)
 
 References:
 -----------
-Liu, L., & Yu, L. (2010). Phybase: an R package for species tree 
-analysis. Bioinformatics (Oxford, England). 
-doi:10.1093/bioinformatics/btq062 
+Liu, L., & Yu, L. (2010). Phybase: an R package for species tree
+analysis. Bioinformatics (Oxford, England).
+doi:10.1093/bioinformatics/btq062
 """
-     
+
     p = argparse.ArgumentParser(description,)
-    
+
     p.add_argument('--input-file','-i',
         help='Path to input file.')
+
     p.add_argument('--outgroup','-o',
         help='Name of outgroup.')
+
+    p.add_argument("--taxa-ids",'-t',
+        default = None,
+        help="List of taxa ids. If there is no \
+              missing data this list is optional.")
+
     p.add_argument('--genetrees','-g', action='store_true',
         help='Set this flag if the input is genetrees and you want the species tree.')
+
     p.add_argument('--bootstraps','-b', action='store_true',
         help='Set this flag if the input is bootstraps and you want multiple species trees.')
+
     p.add_argument('--print-taxa','-p', action='store_true',
         help='Print all the taxon names in the first tree.')
+
     p.add_argument('--sorted','-s', action='store_true',
         help='Set this flag if your bootstraps are sorted by key.')
+
     p.add_argument('--cores','-c', type = int, default = 1,
         help='The number of compute cores to use')
 
     args = p.parse_args()
-    
+
     # check options for errors, etc.
     if args.input_file == None:
         print "Input directory required."
-        print "Type 'python phybase.py -h' for details" 
+        print "Type 'python phybase.py -h' for details"
         sys.exit()
-    
+
     if args.genetrees == True and args.bootstraps == True:
         print "You must pick either genetrees or bootstraps,"
         print "but not both."
-        print "Type 'python phybase.py -h' for details" 
+        print "Type 'python phybase.py -h' for details"
         sys.exit()
 
     if args.genetrees == False and args.bootstraps == False and args.sorted == False and args.print_taxa == False:
         print "You must select either --genetrees, --bootstraps, --sorted, or --print-taxa"
-        print "Type 'python phybase.py -h' for details" 
+        print "Type 'python phybase.py -h' for details"
         sys.exit()
-    
+
     if args.print_taxa != True and args.outgroup == None:
         print 'You much define an outgroup'
-        print "Type 'python phybase.py -h' for details" 
+        print "Type 'python phybase.py -h' for details"
         sys.exit()
 
     args.outgroup = args.outgroup.upper()
@@ -192,6 +203,7 @@ class Phybase:
         self.obj = robjects
         # load phybase
         self.obj.r['library']('phybase')
+        self.obj.r("source('CloudForest/binaries/rcode_NJst.R')")
         sys.stdout = stdout
 
     def cleanPhybaseTree(self, tree):
@@ -201,19 +213,23 @@ class Phybase:
 
     def run(self, trees, outgroup, all_taxa):
         """ generate Steac and Star trees from a list of trees. Requires Phybase and rpy2."""
+
         trees = self.obj.StrVector(trees)
         species_taxaname = self.obj.StrVector(all_taxa)
-        # list of species in current tree
         species_spname = species_taxaname
         matrix_size = len(species_taxaname)
         species_structure = self.obj.r['diag'](1, matrix_size, matrix_size)
-        star_sptree = self.obj.r['star.sptree'](trees, species_spname, species_taxaname,\
-                                                species_structure, outgroup, 'nj')
-        steac_sptree = self.obj.r['steac.sptree'](trees, species_spname, species_taxaname,\
-                                                species_structure, outgroup, 'nj')
-        star_sptree = self.cleanPhybaseTree(str(star_sptree))
-        steac_sptree = self.cleanPhybaseTree(str(steac_sptree))
-        return (star_sptree, steac_sptree)
+        #star_sptree = self.obj.r['star.sptree'](trees, species_spname, species_taxaname,\
+        #                                        species_structure, outgroup, 'nj')
+
+        NJst_sptree = self.obj.r['NJst'](trees, species_taxaname, species_spname, species_structure)
+
+        # steac_sptree = self.obj.r['steac.sptree'](trees, species_spname, species_taxaname,\
+        #                                         species_structure, outgroup, 'nj')
+        #star_sptree = self.cleanPhybaseTree(str(star_sptree))
+        return (None, None, NJst_sptree)
+        # steac_sptree = self.cleanPhybaseTree(str(steac_sptree))
+        # return (star_sptree, steac_sptree)
 
 
 def phyMLTrees(directory):
@@ -239,16 +255,28 @@ def consensus(tree_list, min_freq=0.5):
     return con_tree.as_string('newick')
 
 
-def getTaxa(tree):
-    t = dendropy.Tree()
-    if "=" in tree:
-        tree = tree.split('=')[-1].strip()
-    t.read_from_string(tree, 'newick', preserve_underscores=True)
-    taxa = t.taxon_set.labels()
+def getTaxa(tree, args):
+
+    taxa = []
+
+    if args.taxa_ids is not None:
+        for t in open(args.taxa_ids, 'rU'):
+            if t.startswith("[taxa]") is True:
+                continue
+            else:
+                taxa.append(t.strip().split(":")[1].upper())
+
+    else:
+        t = dendropy.Tree()
+        if "=" in tree:
+            tree = tree.split('=')[-1].strip()
+        t.read_from_string(tree, 'newick', preserve_underscores=True)
+        taxa = t.taxon_set.labels()
+
     return taxa
 
 
-def parseBootreps(args):  
+def parseBootreps(args):
     bootreps = {}
     fin = open(args.input_file, 'rU')
     taxa = []
@@ -260,7 +288,7 @@ def parseBootreps(args):
         if bootreps.has_key(key) != True:
             bootreps[key] = [tree]
         else:
-            bootreps[key].append(tree)  
+            bootreps[key].append(tree)
     star_fout = open(os.path.splitext(args.input_file)[0] + '.star.trees', 'w')
     steac_fout = open(os.path.splitext(args.input_file)[0] + '.steac.trees', 'w')
     steac_trees = []
@@ -425,11 +453,11 @@ def parse_genetrees(args):
     else:
         trees = map(clean_genetree_worker, chunks)
     # get taxa from first tree
-    taxa = getTaxa(trees[0])
+    taxa = getTaxa(trees[0], args)
     # instantiate Phybase instance and analyse trees
     phybase = Phybase()
     star_tree, steac_tree = phybase.run(trees, args.outgroup, taxa)
-    template = """#NEXUS\nbegin trees;\ntree 'STAR' = %s\ntree 'STEAC' = %s\nend;""" % (star_tree, steac_tree)
+    template = """#NEXUS\nbegin trees;\ntree 'STAR' = {0}\ntree 'STEAC' = {1}\ntree 'NJst' = {2}\nend;""".format(star_tree, steac_tree, NJst_tree)
     print template
     star_steac_out = os.path.splitext(args.input_file)[0]
     star_steac_out += '.star_steac.trees'
