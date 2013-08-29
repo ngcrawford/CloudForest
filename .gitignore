@@ -17,3 +17,7 @@ real_data/
 *phyml_stats.txt
 *phyml_tree.txt
 *.egg-info
+*.egg
+distribute*.gz
+Untitled0.ipynb
+cloudforest/Users/
