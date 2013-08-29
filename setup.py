@@ -18,6 +18,7 @@ setup(
         "flask-wtf >= 0.5.2",
         "numpy >= 1.6.1",
         "rpy2 >= 2.2"
+        "dendropy",
     ],
     packages=[
             'cloudforest',
