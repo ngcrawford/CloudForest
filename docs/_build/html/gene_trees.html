@@ -1,0 +1,219 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Basic Concept: &mdash; CloudForest 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CloudForest 2.0.1 documentation" href="index.html" />
+    <link rel="prev" title="FAQ:" href="FAQ.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="FAQ.html" title="FAQ:"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">CloudForest 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="basic-concept">
+<h1>Basic Concept:<a class="headerlink" href="#basic-concept" title="Permalink to this headline">¶</a></h1>
+<p>MORE HERE.....</p>
+<ol class="arabic">
+<li><p class="first">This first line reads in a directory of nexus files files and emits oneliners.</p>
+<blockquote>
+<div><p>python nexus2oneliner.py -i test/alignments/nexus_primates/</p>
+</div></blockquote>
+</li>
+<li><p class="first">Then step one piped directly into <cite>cloudforest.py</cite> with the pipe symbol (= &#8216;|&#8217;).</p>
+<blockquote>
+<div><p>python nexus2oneliner.py -i test/alignments/nexus_primates/ |
+python cloudforest.py ...</p>
+</div></blockquote>
+</li>
+<li><p class="first">Cloudforest has two main functions. You can use it to infer genetrees by setting the <cite>&#8211;gene-trees</cite> flag or you can use it to bootstrap your data as described in [CITE] by setting the <cite>&#8211;bootreps=#</cite> flag. With the default setting cloudforest calculates  <cite>&#8211;mraic</cite></p>
+</li>
+</ol>
+</div>
+<div class="section" id="species-tree-estimation">
+<h1>Species Tree Estimation:<a class="headerlink" href="#species-tree-estimation" title="Permalink to this headline">¶</a></h1>
+<p>This first command will run cloudforest locally with the practice data and produce a file called <cite>genetrees.tre</cite> in the <cite>test</cite> directory.</p>
+<div class="highlight-python"><pre>python cloudforest_mpi.py \
+tests/alignments/phylip_primates/ \
+tests \
+--parallelism=multiprocessing \
+genetrees \
+binaries/PhyML3OSX</pre>
+</div>
+<p>Details about all the modifier flags can be obtained by typing <cite>python cloudforest_mpi.py -h</cite></p>
+<p>You can also run essentially the same command using the emr script. Our recommendation is to use the command when you want to make sure you data looks ok prior to running a more extenstive analysis using a remote hadoop cluster.</p>
+<div class="highlight-python"><pre>python nexus2oneliner.py -i test/alignments/nexus_primates/ |
+python cloudforest_emr.py \
+--protocol=raw_value \
+--setup-cmd 'mkdir -p tmp' \
+--gene-trees \
+--archive=gzips/osx.phylo.tar.gz#bin \
+&gt; primate.gene.trees</pre>
+</div>
+<p>Setting <cite>&#8211;protocol=raw_value</cite> removes &#8216;null&#8217; keys from the final file. <cite>&#8211;setup-cmd &#8216;mkdir -p tmp&#8217;</cite> creates the appropriate <cite>tmp/</cite> directory for storing the phyml output files. This setting is only necessary for running local jobs. <cite>tmp/</cite> is present by default in on Amazon Elastic MapReduce Clusters.</p>
+<p>Setting the <cite>&#8211;mraic</cite> flag will makes cloudforest.py use mraic to infer the appropriate evolutionary model.</p>
+<div class="highlight-python"><pre>python nexus2oneliner.py -i test/alignments/nexus_primates/ |
+python process.py \
+--setup-cmd 'mkdir -p tmp' \
+--gene-trees \
+--mraic \
+--archive=../gzips/osx.phylo.tar.gz#bin \
+&gt; primate.gene.trees</pre>
+</div>
+<p>And, this will run it on Amazon.</p>
+<div class="highlight-python"><pre>python nexus2oneliner.py -i test/alignments/nexus_primates/ |
+python process.py \
+--num-ec2-instances 2 \
+--jobconf mapred.map.tasks=1 \
+--jobconf mapred.reduce.tasks=1 \
+--jobconf mapred.reduce.tasks.speculative.execution=True \
+        --protocol=raw_value \
+--gene-trees \
+--archive=../gzips/aws.phylo.tar.gz#bin \
+&gt; primate.aws.gene.trees \</pre>
+</div>
+<p>Real life example:</p>
+<blockquote>
+<div><p>The main things of note here are the extra map tasks and the extended timeout settings.
+The latter are particularly important if you have longish alignments such as those from
+exons and/or are using MrAIC to infer models.</p>
+<div class="highlight-python"><pre>python nexus2oneliner.py -i some/real/data/nexus |
+python process.py \
+-r emr \
+--num-ec2-instances 250 \
+--jobconf mapred.map.tasks=249 \
+--jobconf mapred.reduce.tasks=1 \
+--jobconf mapred.reduce.tasks.speculative.execution=True \
+--jobconf mapred.task.timeout=18000000 \
+--gene-trees \
+--archive=../gzips/aws.phylo.tar.gz#bin \
+&gt; lotsa.gene.trees</pre>
+</div>
+</div></blockquote>
+<div class="section" id="bootstrapping">
+<h2>Bootstrapping:<a class="headerlink" href="#bootstrapping" title="Permalink to this headline">¶</a></h2>
+<p>Here&#8217;s the command to run it locally with the practice data.</p>
+<div class="highlight-python"><pre>python nexus2oneliner.py -i test/alignments/nexus_primates/ |
+python process.py \
+--setup-cmd 'mkdir -p tmp' \
+--full-analysis \
+--bootreps 5 \
+--archive=../gzips/osx.phylo.tar.gz#bin  \
+&gt; primates.5bootreps.trees</pre>
+</div>
+<p>And, this will run it on Amazon.</p>
+<div class="highlight-python"><pre>python nexus2oneliner.py -i test/alignments/nexus_primates/ |
+python cloudforest.py \
+-r emr \
+--num-ec2-instances 2 \
+--jobconf mapred.map.tasks=1 \
+--jobconf mapred.reduce.tasks=1 \
+--jobconf mapred.reduce.tasks.speculative.execution=True \
+--jobconf mapred.task.timeout=18000000 \
+--full-analysis \
+--bootreps 5 \
+--archive=../gzips/osx.phylo.tar.gz#bin  \
+&gt; primates.5bootreps.aws.trees</pre>
+</div>
+</div>
+<div class="section" id="phybase">
+<h2>Phybase:<a class="headerlink" href="#phybase" title="Permalink to this headline">¶</a></h2>
+<p>Instructions are unfinished.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Basic Concept:</a></li>
+<li><a class="reference internal" href="#species-tree-estimation">Species Tree Estimation:</a><ul>
+<li><a class="reference internal" href="#bootstrapping">Bootstrapping:</a></li>
+<li><a class="reference internal" href="#phybase">Phybase:</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="FAQ.html"
+                        title="previous chapter">FAQ:</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/gene_trees.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="FAQ.html" title="FAQ:"
+             >previous</a> |</li>
+        <li><a href="index.html">CloudForest 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Nicholas Crawford and Brant Faircloth.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>
