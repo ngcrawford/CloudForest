@@ -13,6 +13,7 @@ Description: Core functions for cloudforest
 
 import os
 import re
+import sys
 import shutil
 import argparse
 import platform
@@ -79,9 +80,9 @@ def phylip_to_oneliner(phylip, locus, model=None):
 
 def oneliner_to_phylip(line):
     """Convert one-liner to phylip format."""
-    
+
     # Problem: Phylip has a 10 char limit that is not accounted for. (NGC)
-    # "Strict Phylip expects the first character state to appear on Column 11 
+    # "Strict Phylip expects the first character state to appear on Column 11
     #  for each and every sequence, no ifs, and, or buts."
     # http://www.phylo.org/tools/phylip.html
 
@@ -90,7 +91,7 @@ def oneliner_to_phylip(line):
         line = line.split(":")[-1]
     seqs = line.strip(";\n").split(',')
     label_seqs = zip(seqs[:-1:2], seqs[1::2])
-    print label_seqs
+    #print label_seqs
     taxa_count = len(label_seqs)
     seq_length = len(label_seqs[0][1])
     # pad all names to length of longest name + 1 space
@@ -107,22 +108,28 @@ def get_bootstraps(sample, replicates=1, return_choices=False):
     Returns list
 
     """
+    # make sure we instantiate a Random number generator that doesn't
+    # fall victim to the forking issues w/ multiprocessing
+    #
+    # Create generator w/ seed.  None as input draws from /dev/urandom
+    rng = np.random.RandomState()
     if not isinstance(sample, np.ndarray):
         try:
             sample = np.array(sample)
         except:
             raise TypeError("bootstrap() input must be list or numpy.ndarray")
-    #replicates = int(replicates)
     size = len(sample)
     if replicates == 1:
-        choices = np.random.random_integers(0, size - 1, size)
+        choices = rng.randint(0, size, size)
+        # for debugging
+        #sys.stdout.write(str(choices))
         if not return_choices:
             return sample[choices].tolist()
         else:
             return sample[choices].tolist(), choices
 
     else:
-        return [sample[np.random.random_integers(0, size - 1, size)].tolist()
+        return [sample[rng.randint(0, size, size)].tolist()
                         for i in xrange(replicates)]
 
 
@@ -245,7 +252,7 @@ class Process():
         phyml = Phyml(phylip, pth)
         # run phyml.  if no model, defaults to GTR
         # TOOD: Why do we need LnL?
-        #   For comparing the quality of topologies 
+        #   For comparing the quality of topologies
         args_dict['lnL'], tree = phyml.run(args_dict['model'])
         try:
             gtrees = self.options.gene_trees
@@ -297,7 +304,7 @@ class Process():
 
 class Phyml:
     """Use phyml to generate trees or help select models"""
-    def __init__(self, phylip, pth='bin', temp_dir=None, exe=None, 
+    def __init__(self, phylip, pth='bin', temp_dir=None, exe=None,
                        starting_tree=None, constraint_tree=None):
         self.cwd = os.getcwd()
         if not temp_dir:
