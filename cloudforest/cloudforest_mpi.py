@@ -173,9 +173,8 @@ def bootstrap_worker(params):
         args_dict['lnL'], tree = phyml.run(args_dict['model'])
         #bootstrap_trees.append("tree '%s' = [&U] %s" % (make_tree_name(args_dict), tree))
         bootstrap_trees.append('''%s\t"%s"''' % (rep, tree))
-    sys.stdout.write("[Info] {0} {1} bootstrap completed\n".format(
-            strftime("%a, %d %b %Y %H:%M:%S", localtime()),
-            args_dict['chrm']
+    sys.stdout.write("[Info] {0} bootstrap completed\n".format(
+            strftime("%a, %d %b %Y %H:%M:%S", localtime())
         )
     )
     sys.stdout.flush()
@@ -218,7 +217,7 @@ def main():
         outf.close()
     # compute bootreps on genetrees from above
     if args.run == 'both':
-        sys.stdout.write("Running boostraps of genetrees...\n")
+        sys.stdout.write("Running bootstraps of genetrees...\n")
         # get models for each locus based on genetrees in-memory
         models = dict([[tree[0], tree[1]] for tree in genetrees])
         boostrap_all_loci(args, models, alns)
